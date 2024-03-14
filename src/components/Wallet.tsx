@@ -8,19 +8,18 @@ function Wallet() {
         type="button"
         onClick={connectWallet}
       >
-        Click Me
+        Connect
       </button>
     </>
   );
 }
 
+// Window Object - Represnts the Whole Browser
 declare global {
   interface Window {
     unisat: any;
   }
 }
-
-let unisat = window.unisat; // ok now
 
 async function connectWallet() {
   console.log("HERE!!!!!");
