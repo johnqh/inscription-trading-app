@@ -4,7 +4,6 @@ function Wallet() {
   return (
     <>
       <button
-        // onPress={onPressLearnMore}
         type="button"
         onClick={connectWallet}
       >
@@ -22,7 +21,6 @@ declare global {
 }
 
 async function connectWallet() {
-  console.log("HERE!!!!!");
   try {
     let accounts = await window.unisat.requestAccounts();
     console.log("connect success", accounts);
