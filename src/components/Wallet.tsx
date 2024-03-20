@@ -1,38 +1,118 @@
-import React from "react";
+import React, { useState } from "react";
 
 function Wallet() {
+  const [accounts, setAccounts] = useState<string[]>([]);
+  const [balance, setBalance] = useState({
+    confirmed: 0,
+    unconfirmed: 0,
+    total: 0,
+  });
+  const [inscriptions, setInscriptions] = useState({
+    list: Array(0),
+    total: 0,
+  });
+
+  // Connecting to User's UniSat Wallet
+  async function connectWallet() {
+    let alertMsg =
+      "You don't have the UniSat Wallet Extension installed.\nYou need to download this extension on the Google Chrome web store to interact with this website.";
+
+    // Verifies if the User is Running a Browser with the UniSat Wallet Extension
+    if (typeof unisat === "undefined") return alert(alertMsg);
+
+    try {
+      console.log("UniSat Wallet is installed!");
+      const accounts = await unisat.requestAccounts();
+      console.log("connect success", accounts);
+
+      // Get User's Account Info
+      setAccounts(await getAccountAddress());
+      setBalance(await getAccountBalance());
+      setInscriptions(await getAccountsInscriptions());
+    } catch (e) {
+      console.log("connect failed");
+    }
+  }
+
   return (
     <>
-      <button
-        type="button"
-        onClick={connectWallet}
-      >
+      <button type="button" onClick={connectWallet}>
         Connect
       </button>
+
+      <h1>{accounts}</h1>
+      <h1>{balance.total}</h1>
+      <h1>{inscriptions.list}</h1>
     </>
   );
 }
 
-// Window Object - Represnts the Whole Browser
-declare global {
-  interface Window {
-    unisat: any;
+const unisat = (window as any).unisat;
+
+// Get User's Account Address
+async function getAccountAddress() {
+  try {
+    // User's Account
+    const accountAddresses = await unisat.getAccounts();
+
+    const hiddenAddresses = accountAddresses.map((addr: string) => {
+      // User's Account Sliced
+      const firstFourDigits = addr.slice(0, 4);
+      const middleDigits = addr.slice(4, -4);
+      const lastFourDigits = addr.slice(-4);
+
+      let middleDigitsHidden: string = "";
+
+      // Replace Middle Digits with '*'
+      for (let i = 0; i < middleDigits.length; i += 1) {
+        middleDigitsHidden += "*";
+      }
+
+      // User's Account Hidden
+      let hiddenAccountAddress =
+        firstFourDigits + middleDigitsHidden + lastFourDigits;
+        return hiddenAccountAddress;
+    })
+
+    return hiddenAddresses;
+  } catch (e) {
+    console.log("error in getting account info");
   }
 }
 
-async function connectWallet() {
+// Get User's Account Balance
+async function getAccountBalance() {
   try {
-    let accounts = await window.unisat.requestAccounts();
-    console.log("connect success", accounts);
+    const balance = await unisat.getBalance();
+    console.log("BALANCE: ", balance);
+    return balance;
   } catch (e) {
-    console.log("connect failed");
+    console.log(e);
   }
 }
+
+// Get User's List of Inscriptions
+async function getAccountsInscriptions() {
+  try {
+    const inscriptions = await unisat.getInscriptions();
+    console.log("INSCRIPTIONS: ", inscriptions);
+
+    if (inscriptions.list.length === 0) {
+      console.log("YOU HAVE NO INSCRIPTIONS");
+    }
+
+    return inscriptions;
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+// getAccountsInscriptions();
 
 export default Wallet;
 
 /*
-References
+-------------------- References --------------------
 Window Compatible with TypeScript - https://stackoverflow.com/questions/56457935/typescript-error-property-x-does-not-exist-on-type-window
-requestAccounts() - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet
+UniSat Wallet API - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet
 */
