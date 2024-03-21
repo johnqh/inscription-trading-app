@@ -10,7 +10,7 @@ export type Order = {
 }
 
 function Orders({ orders }: { orders: Order[] }) {
-    if (orders.length == 0) {
+    if (orders.length === 0) {
         return (<p>No orders.</p>);
     }
 
@@ -18,7 +18,7 @@ function Orders({ orders }: { orders: Order[] }) {
         <div>
             {orders.map(
                 (order) => {
-		    let dateExp = new Date(order.expiration);
+            let dateExp = new Date(order.expiration);
                     const expString = (order.expired) ? "Expired" : `Expires on ${dateExp.toLocaleString()}`;
                     return (<p>{order.tick}: {order.amt} at {order.price} <em>{expString}</em></p>)
                 })
