@@ -18,8 +18,6 @@ function User({ address }: { address: string }) {
 
     useEffect(fetchHoldings, []);
 
-    /*
-    Orders API not implemented yet
     const fetchOrders = () => {
         userService
             .getOrders(address)
@@ -29,7 +27,6 @@ function User({ address }: { address: string }) {
     }
 
     useEffect(fetchOrders, []);
-    */
 
     return (
         <div>

@@ -18,8 +18,9 @@ function Orders({ orders }: { orders: Order[] }) {
         <div>
             {orders.map(
                 (order) => {
-                    const expString = (order.expired) ? "Expired" : "Expires on ${order.expiration}";
-                    return (<p>{order.tick}: {order.amt} at {order.price} \t <em>{expString}</em></p>)
+		    let dateExp = new Date(order.expiration);
+                    const expString = (order.expired) ? "Expired" : `Expires on ${dateExp.toLocaleString()}`;
+                    return (<p>{order.tick}: {order.amt} at {order.price} <em>{expString}</em></p>)
                 })
             }
         </div>
