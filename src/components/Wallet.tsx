@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-function Wallet() {
-  const [accounts, setAccounts] = useState<string[]>([]);
+function Wallet( props: {accounts: string[]}) {
+  const [accountsAddress, setAccountsAddress] = useState<string[]>([]);
   const [balance, setBalance] = useState({
     confirmed: 0,
     unconfirmed: 0,
@@ -11,6 +11,10 @@ function Wallet() {
     list: Array(0),
     total: 0,
   });
+
+  useEffect(() => {
+    connectWallet();
+  }, [props.accounts]);
 
   // Connecting to User's UniSat Wallet
   async function connectWallet() {
@@ -22,27 +26,26 @@ function Wallet() {
 
     try {
       console.log("UniSat Wallet is installed!");
-      const accounts = await unisat.requestAccounts();
-      console.log("connect success", accounts);
+      // const accounts = await unisat.requestAccounts();
+      // console.log("connect success", accounts);
 
       // Get User's Account Info
-      setAccounts(await getAccountAddress());
+      setAccountsAddress(await getAccountAddress());
       setBalance(await getAccountBalance());
       setInscriptions(await getAccountsInscriptions());
+      showBalance = "show";
     } catch (e) {
       console.log("connect failed");
     }
   }
 
+  let showBalance = "hide";
+
   return (
     <>
-      <button type="button" onClick={connectWallet}>
-        Connect
-      </button>
-
-      <h1>{accounts}</h1>
-      <h1>{balance.total}</h1>
-      <h1>{inscriptions.list}</h1>
+      <p>{accountsAddress}</p>
+      <p className={showBalance}>{balance.total}</p>
+      <p>{inscriptions.list}</p>
     </>
   );
 }
@@ -106,8 +109,6 @@ async function getAccountsInscriptions() {
     console.log(e);
   }
 }
-
-// getAccountsInscriptions();
 
 export default Wallet;
 
