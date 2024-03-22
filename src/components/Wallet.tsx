@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 
+ let unisat = (window as any).unisat;
+
 function Wallet( props: {accounts: string[]}) {
   const [accountsAddress, setAccountsAddress] = useState<string[]>([]);
   const [balance, setBalance] = useState({
@@ -11,6 +13,11 @@ function Wallet( props: {accounts: string[]}) {
     list: Array(0),
     total: 0,
   });
+
+  // In Case Unisat Doesn't get Loaded
+  if (!unisat) {
+    unisat = (window as any).unisat;
+  }
 
   useEffect(() => {
     connectWallet();
@@ -49,8 +56,6 @@ function Wallet( props: {accounts: string[]}) {
     </>
   );
 }
-
-const unisat = (window as any).unisat;
 
 // Get User's Account Address
 async function getAccountAddress() {
