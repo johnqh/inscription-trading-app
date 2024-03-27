@@ -11,12 +11,19 @@ function App() {
 
   async function connectWallet()
   {
-    let alertMsg =
-      "You don't have the UniSat Wallet Extension installed.\nYou need to download this extension on the Google Chrome web store to interact with this website.";
+    try {
 
-    // Verifies if the User is Running a Browser with the UniSat Wallet Extension
-    if (typeof (window as any).unisat === "undefined") return alert(alertMsg);
-    setAccounts(await (window as any).unisat.requestAccounts());
+    
+      let alertMsg =
+        "You don't have the UniSat Wallet Extension installed.\nYou need to download this extension on the Google Chrome web store to interact with this website.";
+
+      // Verifies if the User is Running a Browser with the UniSat Wallet Extension
+      if (typeof (window as any).unisat === "undefined") return alert(alertMsg);
+      
+      setAccounts(await (window as any).unisat.requestAccounts());
+    } catch (e) {
+      console.log("connect failed");
+    }
   }
 
   return (
