@@ -8,29 +8,39 @@ function User({ address }: { address: string }) {
     const [holdings, setHoldings] = useState([]);
     const [orders, setOrders] = useState([]);
 
-    const fetchHoldings = () => {
+
+    const getAddress = async () => {
+        if (!address) {
+            let unisat = (window as any).unisat;
+            let x = await unisat.getAccounts();
+            return x[0];
+        } else {
+            return address;
+        }
+    }
+
+    useEffect(() => {
+        // Set the address
+        getAddress()
+            .then(data => {
+                address = data;
+                console.log(address)
+            });
+
+        // set the holdings
         userService
             .getHoldings(address)
             .then(data => {
-                setHoldings(data)
+                setHoldings(data);
             });
-    }
 
-    useEffect(fetchHoldings, []);
-
-    const fetchOrders = () => {
+        // Set the orders
         userService
             .getOrders(address)
             .then(data => {
-                setOrders(data)
+                setOrders(data);
             });
-    }
-
-    useEffect(fetchOrders, []);
-
-    if (!address) {
-        return (<p>Wallet not connected</p>);
-    }
+    });
 
     return (
         <div>

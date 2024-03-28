@@ -7,7 +7,7 @@ export type Holding = {
 
 function Holdings({ holdings }: { holdings: Holding[] }) {
 
-    if (holdings.length == 0) {
+    if (holdings.length === 0) {
         return (<p>No holdings.</p>);
     }
 

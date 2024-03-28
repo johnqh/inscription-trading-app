@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import Wallet from "./components/Wallet";
 import Market from "./components/Market";
+import User from "./components/User";
 import logo from "./images/Zorro Cat Logo.png";
 
 import {
@@ -87,7 +88,11 @@ function App() {
     console.log(key);
     switch (key) {
       case "account":
-        return <Wallet accounts={accounts}></Wallet>;
+        return <>
+          <Wallet accounts={accounts}></Wallet>
+          <User address={accounts[0]}></User>
+        </>
+        ;
       case "market":
         return <Market></Market>;
       default:
