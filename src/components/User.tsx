@@ -23,7 +23,9 @@ function User({ address }: { address: string }) {
         // Set the address
         getAddress()
             .then(data => {
-                address = data;
+                if (data != address) {
+                    address = data;
+                }
                 console.log(address)
             });
 
@@ -40,7 +42,7 @@ function User({ address }: { address: string }) {
             .then(data => {
                 setOrders(data);
             });
-    });
+    }, [address]);
 
     if (!address) {
         return (<p>Wallet not connected</p>);
