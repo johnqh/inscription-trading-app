@@ -42,6 +42,10 @@ function User({ address }: { address: string }) {
             });
     });
 
+    if (!address) {
+        return (<p>Wallet not connected</p>);
+    }
+
     return (
         <div>
             <h3>Holdings</h3>

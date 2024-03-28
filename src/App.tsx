@@ -143,24 +143,6 @@ function App() {
         <Footer style={footerStyle}></Footer>
       </Layout>
     </Layout>
-
-    // <div className="App">
-    //   <nav>
-    //     <img id="logo" src={logo} alt="logo"></img>
-    //     <div className="button-wrapper">
-    //           <button id="wallet" onClick={connectWallet}>Connect</button>
-    //     </div>
-
-    //   </nav>
-    //   <div className="panel-wrapper">
-    //     <div className="panel left-panel">
-    //       <Wallet accounts={accounts}></Wallet>
-    //       <Market></Market>
-    //     </div>
-    //     <div className="panel middle-panel"></div>
-    //     <div className="panel right-panel"></div>
-    //   </div>
-    // </div>
   );
 }
 
