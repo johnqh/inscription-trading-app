@@ -25,6 +25,8 @@ function Wallet( props: {accounts: string[]}) {
 
   // Connecting to User's UniSat Wallet
   async function connectWallet() {
+    if (props.accounts.length === 0) return;
+
     let alertMsg =
       "You don't have the UniSat Wallet Extension installed.\nYou need to download this extension on the Google Chrome web store to interact with this website.";
 
@@ -33,9 +35,7 @@ function Wallet( props: {accounts: string[]}) {
 
     try {
       console.log("UniSat Wallet is installed!");
-      // const accounts = await unisat.requestAccounts();
-      // console.log("connect success", accounts);
-
+  
       // Get User's Account Info
       setAccountsAddress(await getAccountAddress());
       setBalance(await getAccountBalance());
