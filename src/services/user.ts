@@ -1,18 +1,18 @@
 import axios from 'axios';
 const API = "http://localhost:3000";
 
-const getHoldings = (address: string) => {
-    const request = axios.get(
+const getHoldings = async (address: string) => {
+    const request = await axios.get(
         API + `/holdings?address=${address}`
     );
-    return request.then(res => res.data);
+    return request.data;
 }
 
-const getOrders = (address: string) => {
-    const request = axios.get(
+const getOrders = async (address: string) => {
+    const request = await axios.get(
         API + `/orders?address=${address}`
     );
-    return request.then(res => res.data);
+    return request.data;
 }
 
 export default { getHoldings, getOrders }
