@@ -1,10 +1,14 @@
-html, body, #root, .App, .panel{
-  height: 100%
+html,
+body,
+#root,
+.App,
+.panel {
+  height: 100%;
 }
 
 .App {
-    display: flex;
-    flex-flow: column;
+  display: flex;
+  flex-flow: column;
 }
 
 .panel-wrapper {
@@ -25,15 +29,13 @@ nav {
 }
 
 #wallet {
-
 }
 
 #logo {
-
 }
 
 .hide {
-  display:none; 
+  display: none;
 }
 
 .panel {
@@ -51,4 +53,23 @@ nav {
 
 .right-panel {
   flex-grow: 2;
+}
+
+/* Overwrite Default Color when Menu Item is Clicked */
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: #2b2a29;
+}
+
+/* Remove Default 'No Data' Image when List is Empty */
+.ant-empty-image {
+  display: none !important;
+}
+
+/* Remove Default 'No Data' Text when List is Empty */
+.ant-empty-description {
+  display: none !important;
+}
+
+.menu-item-selected .anticon {
+  opacity: 1; /* Change opacity when selected */
 }
