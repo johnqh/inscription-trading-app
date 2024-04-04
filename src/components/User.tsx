@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import userService from '../services/user';
 import Holdings from './Holdings';
 import Orders from './Orders';
+import Records from './Records';
 
 
 function User({ address }: { address: string }) {
     const [holdings, setHoldings] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [records, setRecords] = useState([]);
 
 
     const getAddress = async () => {
@@ -26,22 +28,25 @@ function User({ address }: { address: string }) {
                 if (data != address) {
                     address = data;
                 }
-                console.log(address)
             });
 
         // set the holdings
-        userService
-            .getHoldings(address)
+        userService.getHoldings(address)
             .then(data => {
                 setHoldings(data);
             });
 
         // Set the orders
-        userService
-            .getOrders(address)
+        userService.getOrders(address)
             .then(data => {
                 setOrders(data);
             });
+
+        // Set the historical records
+        userService.getRecords(address)
+            .then(data => {
+                setRecords(data);
+            })
     }, [address]);
 
     if (!address) {
@@ -56,6 +61,10 @@ function User({ address }: { address: string }) {
 
             <h3>Outstanding Orders</h3>
             <Orders orders={orders} />
+
+            <h3>Historical Records</h3>
+            <Records records={records} />
+
         </div>
     )
 }

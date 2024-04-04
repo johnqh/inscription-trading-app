@@ -15,4 +15,11 @@ const getOrders = async (address: string) => {
     return request.data;
 }
 
-export default { getHoldings, getOrders }
+const getRecords = async (address: string) => {
+    const request = await axios.get(
+        API + `/historical_records?address=${address}`
+    );
+    return request.data;
+}
+
+export default { getHoldings, getOrders, getRecords }
