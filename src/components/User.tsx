@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import userService from "../services/user";
 import Holdings from "./Holdings";
 import Orders from "./Orders";
+import Sales from "./Sales";
 import { Row, Col, Card } from "antd";
 
 function User({ address }: { address: string }) {
   const [holdings, setHoldings] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [sales, setSales] = useState([]);
   const [balance, setBalance] = useState({
     confirmed: 0,
     unconfirmed: 0,
@@ -14,10 +16,9 @@ function User({ address }: { address: string }) {
   });
   let unisat = (window as any).unisat;
   const getAddress = async () => {
-    if (!address) {
-      //   let unisat = (window as any).unisat;
+    if (!address && unisat) {
       let x = await unisat.getAccounts();
-      return x[0];
+      return x? x[0]: null;
     } else {
       return address;
     }
@@ -25,6 +26,11 @@ function User({ address }: { address: string }) {
 
   // Get User's Account Balance
   async function getAccountBalance() {
+    // To Avoid Attempting to Retrieve Balance when User Still Hasn't Connected to Wallet
+    if (!address) {
+      return;
+    }
+
     try {
       setBalance(await unisat.getBalance());
       console.log("BALANCE: ", balance);
@@ -54,6 +60,8 @@ function User({ address }: { address: string }) {
     userService.getOrders(address).then((data) => {
       setOrders(data);
     });
+
+   
   }, [address]);
 
   if (!address) {
@@ -65,12 +73,22 @@ function User({ address }: { address: string }) {
     padding: "8px 0",
   };
 
+  const headStyle = {
+    backgroundColor: "#5D647B",
+    color: "#f5f5f5",
+  };
+
   return (
     <div>
       <Row gutter={16}>
         <Col className="gutter-row" span={6}>
           <div style={style}>
-            <Card title="My Balance" bordered={true} style={{ }}>
+            <Card
+              title="Balance"
+              headStyle={headStyle}
+              bordered={true}
+              style={{}}
+            >
               {balance.total}
             </Card>
           </div>
@@ -87,7 +105,9 @@ function User({ address }: { address: string }) {
         </Col>
 
         <Col className="gutter-row" span={6}>
-          <div style={style}>col-6</div>
+          <div style={style}>
+            <Sales orders={orders} />
+          </div>
         </Col>
       </Row>
     </div>

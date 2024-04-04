@@ -115,25 +115,25 @@ function App() {
   return (
     <Layout style={layoutStyle}>
       <Sider width="10%" style={siderStyle}>
-        <div style={{display: "flex", flexFlow: "column", height: "100%"}}>
-        <img id="logo" src={logo} alt="logo"></img>
-        
-        <Flex justify="space-between" vertical style={{flexGrow: 1}}>
-          <Menu
-            selectedKeys={[selectedMenuItem]}
-            mode="inline"
-            theme="dark"
-            style={{ backgroundColor: "#5D647B" }}
-            items={items}
-            onClick={(e) => setSelectedMenuItem(e.key)}
-          ></Menu>
-          <Menu
-            mode="inline"
-            theme="dark"
-            style={{ backgroundColor: "#5D647B" }}
-            items={settingsItems}
-          ></Menu>
-        </Flex>
+        <div style={{ display: "flex", flexFlow: "column", height: "100%" }}>
+          <img id="logo" src={logo} alt="logo"></img>
+
+          <Flex justify="space-between" vertical style={{ flexGrow: 1 }}>
+            <Menu
+              selectedKeys={[selectedMenuItem]}
+              mode="inline"
+              theme="dark"
+              style={{ backgroundColor: "#5D647B" }}
+              items={items}
+              onClick={(e) => setSelectedMenuItem(e.key)}
+            ></Menu>
+            <Menu
+              mode="inline"
+              theme="dark"
+              style={{ backgroundColor: "#5D647B" }}
+              items={settingsItems}
+            ></Menu>
+          </Flex>
         </div>
       </Sider>
       <Layout>

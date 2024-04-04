@@ -15,11 +15,11 @@ export type Order = {
 const customizeRenderEmpty = () => (
   <div style={{ textAlign: "center" }}>
     <FrownOutlined style={{ fontSize: 20 }} />
-    <p>No orders</p>
+    <p>No sales</p>
   </div>
 );
 
-function Orders({ orders }: { orders: Order[] }) {
+function Sales({ orders }: { orders: Order[] }) {
   const headStyle = {
     backgroundColor: "#5D647B",
     color: "#f5f5f5",
@@ -27,7 +27,7 @@ function Orders({ orders }: { orders: Order[] }) {
 
   return (
     <div>
-      <Card title="Orders" headStyle={headStyle} bordered={true} style={{}}>
+      <Card title="Sales" headStyle={headStyle} bordered={true} style={{}}>
         0
       </Card>
       <ConfigProvider renderEmpty={customizeRenderEmpty}>
@@ -52,4 +52,4 @@ function Orders({ orders }: { orders: Order[] }) {
   );
 }
 
-export default Orders;
+export default Sales;

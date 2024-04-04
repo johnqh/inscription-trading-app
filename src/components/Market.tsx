@@ -9,7 +9,10 @@ import {
   Input,
   Radio,
   type FormProps,
+  message,
+  Popconfirm,
 } from "antd";
+import "../App.css";
 
 let apiPrefix = "http://localhost:3000";
 
@@ -29,7 +32,11 @@ function Market() {
     for (let token of tokens) {
       elements.push(
         <div>
-          <span>{token.tick}</span>
+          <span>
+            <a style={{ color: "inherit" }} href="/">
+              {token.tick}
+            </a>
+          </span>
         </div>
       );
     }
@@ -57,6 +64,46 @@ function Market() {
   ) => {
     console.log("Failed:", errorInfo);
   };
+
+  const confirmBid = (e?: React.MouseEvent<HTMLElement>) => {
+    console.log(e);
+    message.success("Knock on wood! Your bid was added to the order book.");
+  };
+
+  const cancelBid = (e?: React.MouseEvent<HTMLElement>) => {
+    console.log(e);
+    message.error("Aw-shucks! Your bid was not added to the order book.");
+  };
+
+  const confirmAsk = (e?: React.MouseEvent<HTMLElement>) => {
+    console.log(e);
+    message.success("Knock on wood! Your ask was added to the order book.");
+  };
+
+  const cancelAsk = (e?: React.MouseEvent<HTMLElement>) => {
+    console.log(e);
+    message.error("Aw-shucks! Your ask was not added to the order book.");
+  };
+
+   const confirmBuy = (e?: React.MouseEvent<HTMLElement>) => {
+     console.log(e);
+     message.success("Kudos! Tokens were added to your wallet.");
+   };
+
+   const cancelBuy = (e?: React.MouseEvent<HTMLElement>) => {
+     console.log(e);
+     message.error("Aw-shucks! Tokens weren't added to your wallet.");
+   };
+
+    const confirmSell = (e?: React.MouseEvent<HTMLElement>) => {
+      console.log(e);
+      message.success("Kudos! Coins were added to your wallet.");
+    };
+
+    const cancelSell = (e?: React.MouseEvent<HTMLElement>) => {
+      console.log(e);
+      message.error("Aw-shucks! Coins weren't added to your wallet.");
+    };
 
   return (
     <>
@@ -133,38 +180,74 @@ function Market() {
 
             <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
               {orderType === "buy" ? (
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  style={{ backgroundColor: "#5D647B" }}
+                <Popconfirm
+                  title="Place bid"
+                  description="Are you sure you want to place a bid?"
+                  onConfirm={confirmBid}
+                  onCancel={cancelBid}
+                  okText="Yes"
+                  cancelText="No"
                 >
-                  Bid
-                </Button>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    style={{ backgroundColor: "#5D647B" }}
+                  >
+                    Bid
+                  </Button>
+                </Popconfirm>
               ) : (
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  style={{ backgroundColor: "#5D647B" }}
+                <Popconfirm
+                  title="Place ask"
+                  description="Are you sure you want to place an ask?"
+                  onConfirm={confirmAsk}
+                  onCancel={cancelAsk}
+                  okText="Yes"
+                  cancelText="No"
                 >
-                  Ask
-                </Button>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    style={{ backgroundColor: "#5D647B" }}
+                  >
+                    Ask
+                  </Button>
+                </Popconfirm>
               )}
               {orderType === "buy" ? (
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  style={{ backgroundColor: "#5D647B" }}
+                <Popconfirm
+                  title="Buy order"
+                  description="Are you sure you want to buy at market price?"
+                  onConfirm={confirmBuy}
+                  onCancel={cancelBuy}
+                  okText="Yes"
+                  cancelText="No"
                 >
-                  Buy
-                </Button>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    style={{ backgroundColor: "#5D647B" }}
+                  >
+                    Buy
+                  </Button>
+                </Popconfirm>
               ) : (
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  style={{ backgroundColor: "#5D647B" }}
+                <Popconfirm
+                  title="Sell order"
+                  description="Are you sure you want to sell at market price?"
+                  onConfirm={confirmSell}
+                  onCancel={cancelSell}
+                  okText="Yes"
+                  cancelText="No"
                 >
-                  Sell
-                </Button>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    style={{ backgroundColor: "#5D647B" }}
+                  >
+                    Sell
+                  </Button>
+                </Popconfirm>
               )}
             </Form.Item>
           </Form>

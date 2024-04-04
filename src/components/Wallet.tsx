@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CopyOutlined } from "@ant-design/icons";
-import { Button } from "antd";
+import { Button, message } from "antd";
 
 let unisat = (window as any).unisat;
 
@@ -53,16 +53,21 @@ function Wallet(props: { accounts: string[] }) {
 
   function copyAddress() {
     navigator.clipboard.writeText(address[0]);
+    message.success("Copied");
   }
 
   return (
     <>
-      <p>
+      <p style={{textAlign: "left", paddingLeft: "25px"}}>
         {accountsAddress}{" "}
         <Button
           className={showWallet}
           type="primary"
-          style={{ backgroundColor: "transparent", color: "#2b2a29" }}
+          style={{
+            backgroundColor: "transparent",
+            color: "#2b2a29",
+            boxShadow: "none",
+          }}
           onClick={copyAddress}
           icon={<CopyOutlined />}
         />
@@ -136,4 +141,5 @@ export default Wallet;
 -------------------- References --------------------
 Window Compatible with TypeScript - https://stackoverflow.com/questions/56457935/typescript-error-property-x-does-not-exist-on-type-window
 UniSat Wallet API - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet
+Message - https://ant.design/components/message
 */

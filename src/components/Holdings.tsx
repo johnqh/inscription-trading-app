@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, List, ConfigProvider } from "antd";
-import {SmileOutlined} from "@ant-design/icons";
+import { FrownOutlined } from "@ant-design/icons";
 
 export type Holding = {
   tick: string;
@@ -11,7 +11,7 @@ export type Holding = {
 
 const customizeRenderEmpty = () => (
   <div style={{ textAlign: "center" }}>
-    <SmileOutlined style={{ fontSize: 20 }} />
+    <FrownOutlined style={{ fontSize: 20 }} />
     <p>No holdings</p>
   </div>
 );
@@ -23,9 +23,17 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
     setTotalTokens(holdings.reduce((total, holding) => total + holding.amt, 0));
   }, [holdings]);
 
+  const headStyle = {
+    backgroundColor: "#5D647B",
+    color: "#f5f5f5",
+    fontFamily: "broadacre-thin-4, sans-serif",
+  };
+
   return (
     <div>
-      <Card title="My Tokens" bordered={true} style={{}}></Card>
+      <Card title="Tokens" headStyle={headStyle} bordered={true} style={{}}>
+        0
+      </Card>
       <ConfigProvider renderEmpty={customizeRenderEmpty}>
         <List
           bordered
