@@ -3,7 +3,9 @@ import userService from "../services/user";
 import Holdings from "./Holdings";
 import Orders from "./Orders";
 import Sales from "./Sales";
-import { Row, Col, Card } from "antd";
+import btcLogo from "../images/btc-logo.png";
+import { Row, Col, Card, Flex, Space } from "antd";
+
 
 function User({ address }: { address: string }) {
   const [holdings, setHoldings] = useState([]);
@@ -14,11 +16,13 @@ function User({ address }: { address: string }) {
     unconfirmed: 0,
     total: 0,
   });
+  const [isTotal, setIsTotal] = useState(true); // Keep Trackk which Balance to Show Sats or BTC
+
   let unisat = (window as any).unisat;
   const getAddress = async () => {
     if (!address && unisat) {
       let x = await unisat.getAccounts();
-      return x? x[0]: null;
+      return x ? x[0] : null;
     } else {
       return address;
     }
@@ -51,6 +55,11 @@ function User({ address }: { address: string }) {
 
     getAccountBalance();
 
+    // Change Between Balances (Sats or BTC) Every 5 Seconds
+    const intervalId = setInterval(() => {
+      setIsTotal((prevIsTotal) => !prevIsTotal);
+    }, 12000);
+
     // set the holdings
     userService.getHoldings(address).then((data) => {
       setHoldings(data);
@@ -61,7 +70,8 @@ function User({ address }: { address: string }) {
       setOrders(data);
     });
 
-   
+    // Clean Up Interval
+    return () => clearInterval(intervalId);
   }, [address]);
 
   if (!address) {
@@ -82,17 +92,59 @@ function User({ address }: { address: string }) {
     <div>
       <Row gutter={16}>
         <Col className="gutter-row" span={6}>
-          <div style={style}>
-            <Card
-              title="Balance"
-              headStyle={headStyle}
-              bordered={true}
-              style={{}}
-            >
-              {balance.total}
-            </Card>
-          </div>
+          <Space direction="vertical" size="middle" style={{ display: "flex" }}>
+            <div style={style}>
+              <Card
+                title="Balance"
+                styles={{ header: headStyle }}
+                bordered={true}
+              >
+                <Flex justify="center">
+                  <Space
+                    size={[6, 6]}
+                    wrap
+                    style={{
+                      // border: "2px solid #faf9f7",
+                      // borderRadius: "25px",
+                      // padding: "5px",
+                    }}
+                  >
+                    <img
+                      id="logo"
+                      src={btcLogo}
+                      style={{
+                        height: "20px",
+                        width: "20px",
+                        marginTop: "5px",
+                      }}
+                      alt="btc-logo"
+                    ></img>
+                    <div>
+                      <span>
+                        {isTotal
+                          ? balance.total
+                          : (balance.total / 100000000).toFixed(8)}
+                      </span>
+                      <span
+                        // #5D647B #f7931a
+                        style={{
+                          color: "#5D647B",
+                          fontWeight: "bold",
+                          fontSize: "10px",
+                          marginLeft: "2px",
+                          marginTop: "13px",
+                        }}
+                      >
+                        {isTotal ? "sats" : "BTC"}
+                      </span>
+                    </div>
+                  </Space>
+                </Flex>
+              </Card>
+            </div>
+          </Space>
         </Col>
+
         <Col className="gutter-row" span={6}>
           <div style={style}>
             <Holdings holdings={holdings} />

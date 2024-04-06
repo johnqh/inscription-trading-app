@@ -1,4 +1,4 @@
-import { List, Card, ConfigProvider } from "antd";
+import { List, Card, ConfigProvider, Space } from "antd";
 import { FrownOutlined } from "@ant-design/icons";
 
 export type Order = {
@@ -27,27 +27,35 @@ function Orders({ orders }: { orders: Order[] }) {
 
   return (
     <div>
-      <Card title="Orders" headStyle={headStyle} bordered={true} style={{}}>
-        0
-      </Card>
-      <ConfigProvider renderEmpty={customizeRenderEmpty}>
-        <List
-          bordered
-          dataSource={orders}
-          renderItem={(order) => {
-            let dateExp = new Date(order.expiration);
-            const expString = order.expired
-              ? "Expired"
-              : `Expires on ${dateExp.toLocaleString()}`;
-            return (
-              <List.Item>
-                {order.tick}: {order.amt} at {order.price} <em>{expString}</em>
-              </List.Item>
-            );
-          }}
-          locale={{ emptyText: "" }}
-        />
-      </ConfigProvider>
+      <Space direction="vertical" size="middle" style={{ display: "flex" }}>
+        <Card
+          title="Orders"
+          styles={{ header: headStyle }}
+          bordered={true}
+          style={{}}
+        >
+          0
+        </Card>
+        <ConfigProvider renderEmpty={customizeRenderEmpty}>
+          <List
+            bordered
+            dataSource={orders}
+            renderItem={(order) => {
+              let dateExp = new Date(order.expiration);
+              const expString = order.expired
+                ? "Expired"
+                : `Expires on ${dateExp.toLocaleString()}`;
+              return (
+                <List.Item>
+                  {order.tick}: {order.amt} at {order.price}{" "}
+                  <em>{expString}</em>
+                </List.Item>
+              );
+            }}
+            locale={{ emptyText: "" }}
+          />
+        </ConfigProvider>
+      </Space>
     </div>
   );
 }

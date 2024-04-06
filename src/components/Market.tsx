@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios"; // HTTP requests
+import axios, {AxiosError} from "axios"; // HTTP requests
 import {
   Button,
   List,
@@ -12,20 +12,40 @@ import {
   message,
   Popconfirm,
 } from "antd";
-import "../App.css";
+// import "../App.css";
 
-let apiPrefix = "http://localhost:3000";
+
+const apiKey = process.env.REACT_APP_API_KEY || "";
+const apiUrl =
+  "https://open-api-testnet.unisat.io/v1/indexer/brc20/list?start=0&limit=25";
+console.log("WALLET_PRIVATE_KEY:", process.env.REACT_APP_API_KEY);
 
 function Market() {
   const [tokenElements, setTokenElements] = useState<any[]>([]);
   const [orderType, setOrderType] = useState("buy");
 
   async function getTokens() {
-    let url = apiPrefix + "/deploy";
-    let response = await axios.get(url);
+    // let url = apiPrefix + "/deploy";
+    let responseData: any; // Define a variable to store the response data
 
-    console.log(response.data);
-    const tokens = response.data;
+    try {
+      const response = await axios.get(apiUrl, {
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+      });
+      responseData = response.data;
+    } catch (error: any) {
+      console.error("Error:", error.message);
+      return null;
+    }
+    
+
+    console.log("-----RESPONSE DATA-----");
+    console.log(responseData);
+    const tokens = responseData.data.detail;
+    console.log("LENGTH: " + tokens.length);
 
     const elements = [];
 
@@ -34,7 +54,7 @@ function Market() {
         <div>
           <span>
             <a style={{ color: "inherit" }} href="/">
-              {token.tick}
+              {token}
             </a>
           </span>
         </div>
@@ -42,6 +62,7 @@ function Market() {
     }
     console.log(elements);
     setTokenElements(elements);
+    console.log("TOKEN ELEMENTS LENGTH: " + tokenElements.length);
   }
 
   // Makes Sure Updates Only Happen Once
@@ -85,25 +106,25 @@ function Market() {
     message.error("Aw-shucks! Your ask was not added to the order book.");
   };
 
-   const confirmBuy = (e?: React.MouseEvent<HTMLElement>) => {
-     console.log(e);
-     message.success("Kudos! Tokens were added to your wallet.");
-   };
+  const confirmBuy = (e?: React.MouseEvent<HTMLElement>) => {
+    console.log(e);
+    message.success("Kudos! Tokens were added to your wallet.");
+  };
 
-   const cancelBuy = (e?: React.MouseEvent<HTMLElement>) => {
-     console.log(e);
-     message.error("Aw-shucks! Tokens weren't added to your wallet.");
-   };
+  const cancelBuy = (e?: React.MouseEvent<HTMLElement>) => {
+    console.log(e);
+    message.error("Aw-shucks! Tokens weren't added to your wallet.");
+  };
 
-    const confirmSell = (e?: React.MouseEvent<HTMLElement>) => {
-      console.log(e);
-      message.success("Kudos! Coins were added to your wallet.");
-    };
+  const confirmSell = (e?: React.MouseEvent<HTMLElement>) => {
+    console.log(e);
+    message.success("Kudos! Coins were added to your wallet.");
+  };
 
-    const cancelSell = (e?: React.MouseEvent<HTMLElement>) => {
-      console.log(e);
-      message.error("Aw-shucks! Coins weren't added to your wallet.");
-    };
+  const cancelSell = (e?: React.MouseEvent<HTMLElement>) => {
+    console.log(e);
+    message.error("Aw-shucks! Coins weren't added to your wallet.");
+  };
 
   return (
     <>
@@ -119,7 +140,7 @@ function Market() {
           />
         </Col>
         {/* ------------------------- Order Book ------------------------- */}
-        <Col span={8}>col-8</Col>
+        <Col span={8}></Col>
 
         {/* ------------------------- Order Form: Buy or Sell ------------------------- */}
         <Col span={8}>
