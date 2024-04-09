@@ -1,5 +1,6 @@
 import { List, Card, ConfigProvider, Space } from "antd";
 import { FrownOutlined } from "@ant-design/icons";
+import axios from "axios";
 
 export type Order = {
   id: number;
@@ -19,22 +20,24 @@ const customizeRenderEmpty = () => (
   </div>
 );
 
-function Orders({ orders }: { orders: Order[] }) {
+function Orders({ orders, title }: { orders: Order[], title: string }) {
   const headStyle = {
     backgroundColor: "#5D647B",
     color: "#f5f5f5",
   };
 
+  console.log(orders);
+
   return (
     <div>
       <Space direction="vertical" size="middle" style={{ display: "flex" }}>
         <Card
-          title="Orders"
+          title={title}
           styles={{ header: headStyle }}
           bordered={true}
           style={{}}
         >
-          0
+          {orders.length}
         </Card>
         <ConfigProvider renderEmpty={customizeRenderEmpty}>
           <List

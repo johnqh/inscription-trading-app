@@ -2,15 +2,12 @@ import { useEffect, useState } from "react";
 import userService from "../services/user";
 import Holdings from "./Holdings";
 import Orders from "./Orders";
-import Sales from "./Sales";
 import btcLogo from "../images/btc-logo.png";
 import { Row, Col, Card, Flex, Space } from "antd";
 
-
 function User({ address }: { address: string }) {
   const [holdings, setHoldings] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [sales, setSales] = useState([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [balance, setBalance] = useState({
     confirmed: 0,
     unconfirmed: 0,
@@ -103,11 +100,13 @@ function User({ address }: { address: string }) {
                   <Space
                     size={[6, 6]}
                     wrap
-                    style={{
-                      // border: "2px solid #faf9f7",
-                      // borderRadius: "25px",
-                      // padding: "5px",
-                    }}
+                    style={
+                      {
+                        // border: "2px solid #faf9f7",
+                        // borderRadius: "25px",
+                        // padding: "5px",
+                      }
+                    }
                   >
                     <img
                       id="logo"
@@ -152,13 +151,13 @@ function User({ address }: { address: string }) {
         </Col>
         <Col className="gutter-row" span={6}>
           <div style={style}>
-            <Orders orders={orders} />
+            <Orders orders={orders.filter((order) => order.side === 1)} title="Buy"  />
           </div>
         </Col>
 
         <Col className="gutter-row" span={6}>
           <div style={style}>
-            <Sales orders={orders} />
+            <Orders orders={orders.filter((order) => order.side === 0)} title="Sell"/>
           </div>
         </Col>
       </Row>
@@ -167,3 +166,11 @@ function User({ address }: { address: string }) {
 }
 
 export default User;
+
+/*
+-------------------- References --------------------
+Grid - https://ant.design/components/grid
+Space - https://ant.design/components/space
+Flex - https://ant.design/components/flex
+Card - https://ant.design/components/card
+*/
