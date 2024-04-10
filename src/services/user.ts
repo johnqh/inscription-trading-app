@@ -7,6 +7,13 @@ const getHoldings = async (address: string) => {
     return request.data;
   } catch (e) {
     console.log(e);
+
+    // If the API can't get holdings for an address, likely cause is a bad API
+    // key
+    if (address) {
+      alert(`Unable to fetch holdings for address ${address}, try again later`);
+    }
+    return [];
   }
 };
 
@@ -16,6 +23,7 @@ const getOrders = async (address: string) => {
     return request.data;
   } catch (e) {
     console.log(e);
+    return [];
   }
 };
 
