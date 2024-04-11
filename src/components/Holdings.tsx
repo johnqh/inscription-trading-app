@@ -17,13 +17,10 @@ const customizeRenderEmpty = () => (
   </div>
 );
 
-  const apiKey = process.env.REACT_APP_API_KEY || '';
-  const apiUrl =
-    "https://open-api-testnet.unisat.io/v1/indexer/address/tb1qeuzkvusgyxekclxwzjl49n9g30ankw60ly2l5m/brc20/summary?start=0&limit=16";
-
 let unisat = (window as any).unisat;
 
 function Holdings({ holdings }: { holdings: Holding[] }) {
+  const [totalTokens, setTotalTokens] = useState(0);
   const [inscriptions, setInscriptions] = useState({
     list: Array(0),
     total: 0,
@@ -31,44 +28,27 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
   const [tick, setTick] = useState<any[]>([]);
 
   async function getSummary() {
-    let responseData: any; // Define a variable to store the response data
-
-    try {
-      const response = await axios.get(apiUrl, {
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-      });
-      responseData = response.data;
-    } catch (error: any) {
-      console.error("Error:", error.message);
-      return null;
-    }
-
-    console.log("-----RESPONSE DATA-----");
-    console.log(responseData);
-    // setTick(responseData.data);
-    console.log("RESPONSE TICK: " + responseData.data.detail[0].ticker);
-    console.log("TICK: " + tick);
-    const tokens = responseData.data.detail;
-
     const elements = [];
+    let tokens = 0;
 
-    for (let token of tokens) {
+    for (let token of holdings) {
+      console.log(token);
       elements.push(
         <div>
           <span>
             <a style={{ color: "inherit" }} href="/">
-              {token}
+              {token.tick}: {token.amt}
             </a>
           </span>
         </div>
       );
+      tokens += token.amt;
     }
 
     console.log(elements);
+    console.log(tokens);
     setTick(elements);
+    setTotalTokens(tokens);
   }
 
   useEffect(() => {
@@ -107,13 +87,13 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
           bordered={true}
           style={{}}
         >
-          {inscriptions.total}
+          {totalTokens}
         </Card>
         <ConfigProvider renderEmpty={customizeRenderEmpty}>
           <List
             bordered
             dataSource={tick}
-            renderItem={(item) => <List.Item>{item.ticker}</List.Item>}
+            renderItem={(item) => <List.Item>{item}</List.Item>}
             locale={{ emptyText: "" }}
           />
         </ConfigProvider>
