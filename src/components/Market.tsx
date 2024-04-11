@@ -23,7 +23,6 @@ console.log("WALLET_PRIVATE_KEY:", process.env.REACT_APP_API_KEY);
 
 function Market() {
   const [tokens, setTokens] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
   const [orderType, setOrderType] = useState("buy");
   const [selectedToken, setSelectedToken] = useState("");
 
@@ -47,13 +46,6 @@ function Market() {
     console.log(responseData);
     setTokens(responseData.data.detail);
     console.log("LENGTH: " + tokens.length);
-  }
-
-  async function getOrders() {
-    let url = apiPrefix + "/orders";
-    let response = await axios.get(url);
-
-    setOrders(response.data);
   }
 
   let unisat = (window as any).unisat;
@@ -169,27 +161,27 @@ function Market() {
       <Space direction="vertical" size="middle" style={{ display: "flex" }}>
         <Row style={{ maxHeight: "600px", overflowY: "scroll" }}>
           {/* ------------------------- List of Tokens ------------------------- */}
-          {/* // onChange={(e) => setOrderType(e.target.value)} */}
           <Col span={8}>
             <List
               header={<div>Top BRC-20 Tokens</div>}
               bordered
               dataSource={tokens}
               renderItem={(token) => (
-                <List.Item>
+                <List.Item
+                  onClick={() => {
+                    setSelectedToken(token);
+                    console.log(token);
+                  }}
+                  style={{
+                    color: selectedToken === token ? "white" : "inherit",
+                    backgroundColor:
+                      selectedToken === token ? "#2b2a29" : "white",
+                    cursor: "pointer",
+                  }}
+                >
                   {" "}
                   <div>
-                    <span>
-                      <a
-                        onClick={(e) => {
-                          setSelectedToken(token);
-                          console.log(e.target);
-                        }}
-                        style={{ color: "inherit" }}
-                      >
-                        {token}
-                      </a>
-                    </span>
+                    <span>{token}</span>
                   </div>
                 </List.Item>
               )}
@@ -197,22 +189,7 @@ function Market() {
             />
           </Col>
           {/* ------------------------- Order Book ------------------------- */}
-          <Col span={8}>
-            <List
-              header={<div>Orders</div>}
-              bordered
-              dataSource={orders}
-              renderItem={(order) => (
-                <List.Item>
-                  {" "}
-                  <div>
-                    <span>{order.tick}</span>
-                  </div>
-                </List.Item>
-              )}
-              locale={{ emptyText: "" }}
-            />
-          </Col>
+          <Col span={8}></Col>
           {/* ------------------------- Order Form: Buy or Sell ------------------------- */}
           <Col span={8}>
             <Form

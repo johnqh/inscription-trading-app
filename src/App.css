@@ -14,7 +14,6 @@ body,
 .panel-wrapper {
   display: flex;
   flex-direction: row;
-  /* height: 100%; */
   align-items: stretch;
   flex-grow: 1;
 }
@@ -26,12 +25,6 @@ nav {
   height: 100%;
   vertical-align: middle;
   float: right;
-}
-
-#wallet {
-}
-
-#logo {
 }
 
 .hide {

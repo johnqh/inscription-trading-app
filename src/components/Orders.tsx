@@ -1,6 +1,5 @@
 import { List, Card, ConfigProvider, Space } from "antd";
 import { FrownOutlined } from "@ant-design/icons";
-import axios from "axios";
 
 export type Order = {
   id: number;

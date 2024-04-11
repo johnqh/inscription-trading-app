@@ -97,17 +97,7 @@ function User({ address }: { address: string }) {
                 bordered={true}
               >
                 <Flex justify="center">
-                  <Space
-                    size={[6, 6]}
-                    wrap
-                    style={
-                      {
-                        // border: "2px solid #faf9f7",
-                        // borderRadius: "25px",
-                        // padding: "5px",
-                      }
-                    }
-                  >
+                  <Space size={[6, 6]} wrap style={{}}>
                     <img
                       id="logo"
                       src={btcLogo}
@@ -125,7 +115,6 @@ function User({ address }: { address: string }) {
                           : (balance.total / 100000000).toFixed(8)}
                       </span>
                       <span
-                        // #5D647B #f7931a
                         style={{
                           color: "#5D647B",
                           fontWeight: "bold",
@@ -151,13 +140,19 @@ function User({ address }: { address: string }) {
         </Col>
         <Col className="gutter-row" span={6}>
           <div style={style}>
-            <Orders orders={orders.filter((order) => order.side === 1)} title="Buy"  />
+            <Orders
+              orders={orders.filter((order) => order.side === 1)}
+              title="Buy"
+            />
           </div>
         </Col>
 
         <Col className="gutter-row" span={6}>
           <div style={style}>
-            <Orders orders={orders.filter((order) => order.side === 0)} title="Sell"/>
+            <Orders
+              orders={orders.filter((order) => order.side === 0)}
+              title="Sell"
+            />
           </div>
         </Col>
       </Row>

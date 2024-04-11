@@ -24,7 +24,6 @@ const customizeRenderEmpty = () => (
 let unisat = (window as any).unisat;
 
 function Holdings({ holdings }: { holdings: Holding[] }) {
-  const [totalTokens, setTotalTokens] = useState(0);
   const [inscriptions, setInscriptions] = useState({
     list: Array(0),
     total: 0,
@@ -73,15 +72,12 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
   }
 
   useEffect(() => {
-    // setTotalTokens(holdings.reduce((total, holding) => total + holding.amt, 0));
-
     getSummary();
 
     // Get User's List of Inscriptions
     async function getAccountsInscriptions() {
       try {
         setInscriptions(await unisat.getInscriptions());
-        // console.log("INSCRIPTIONS: ", inscriptions);
 
         if (inscriptions.list.length === 0) {
           console.log("YOU HAVE NO INSCRIPTIONS");
@@ -116,16 +112,7 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
         <ConfigProvider renderEmpty={customizeRenderEmpty}>
           <List
             bordered
-            // dataSource={holdings}
             dataSource={tick}
-            // renderItem={(holding) => (
-            //   <List.Item>
-            //     {holding.tick}: {holding.amt}{" "}
-            //     <em>Since block {holding.updated_at_block}</em>
-            //     {tick}: {holding.amt}{" "}
-            //     <em>Since block {holding.updated_at_block}</em>
-            //   </List.Item>
-            // )}
             renderItem={(item) => <List.Item>{item.ticker}</List.Item>}
             locale={{ emptyText: "" }}
           />
