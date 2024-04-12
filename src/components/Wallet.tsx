@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { CopyOutlined } from "@ant-design/icons";
+import { Button, message } from "antd";
 
- let unisat = (window as any).unisat;
+let unisat = (window as any).unisat;
 
-function Wallet( props: {accounts: string[]}) {
+function Wallet(props: { accounts: string[] }) {
   const [accountsAddress, setAccountsAddress] = useState<string[]>([]);
   const [balance, setBalance] = useState({
     confirmed: 0,
@@ -13,6 +15,8 @@ function Wallet( props: {accounts: string[]}) {
     list: Array(0),
     total: 0,
   });
+  const [address, setAddress] = useState<string[]>([]);
+  const [showWallet, setShowWallet] = useState("hide");
 
   // In Case Unisat Doesn't get Loaded
   if (!unisat) {
@@ -35,52 +39,68 @@ function Wallet( props: {accounts: string[]}) {
 
     try {
       console.log("UniSat Wallet is installed!");
-  
+
       // Get User's Account Info
       setAccountsAddress(await getAccountAddress());
       setBalance(await getAccountBalance());
       setInscriptions(await getAccountsInscriptions());
-      showBalance = "show";
+      setAddress(await getAddress());
+      setShowWallet("show");
     } catch (e) {
       console.log("connect failed");
     }
   }
 
-  let showBalance = "hide";
+  function copyAddress() {
+    navigator.clipboard.writeText(address[0]);
+    message.success("Copied");
+  }
 
   return (
     <>
-      <p>{accountsAddress}</p>
-      <p className={showBalance}>{balance.total}</p>
-      <p>{inscriptions.list}</p>
+      <p style={{textAlign: "left", paddingLeft: "25px"}}>
+        {accountsAddress}{" "}
+        <Button
+          className={showWallet}
+          type="primary"
+          style={{
+            backgroundColor: "transparent",
+            color: "#2b2a29",
+            boxShadow: "none",
+          }}
+          onClick={copyAddress}
+          icon={<CopyOutlined />}
+        />
+      </p>
     </>
   );
+}
+
+async function getAddress() {
+  try {
+    return await unisat.getAccounts();
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 // Get User's Account Address
 async function getAccountAddress() {
   try {
     // User's Account
-    const accountAddresses = await unisat.getAccounts();
+    const accountAddresses = await getAddress();
 
     const hiddenAddresses = accountAddresses.map((addr: string) => {
       // User's Account Sliced
       const firstFourDigits = addr.slice(0, 4);
-      const middleDigits = addr.slice(4, -4);
+      const middleDigits = "...";
       const lastFourDigits = addr.slice(-4);
-
-      let middleDigitsHidden: string = "";
-
-      // Replace Middle Digits with '*'
-      for (let i = 0; i < middleDigits.length; i += 1) {
-        middleDigitsHidden += "*";
-      }
 
       // User's Account Hidden
       let hiddenAccountAddress =
-        firstFourDigits + middleDigitsHidden + lastFourDigits;
-        return hiddenAccountAddress;
-    })
+        firstFourDigits + middleDigits + lastFourDigits;
+      return hiddenAccountAddress;
+    });
 
     return hiddenAddresses;
   } catch (e) {
@@ -121,4 +141,5 @@ export default Wallet;
 -------------------- References --------------------
 Window Compatible with TypeScript - https://stackoverflow.com/questions/56457935/typescript-error-property-x-does-not-exist-on-type-window
 UniSat Wallet API - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet
+Message - https://ant.design/components/message
 */

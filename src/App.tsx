@@ -4,19 +4,11 @@ import Wallet from "./components/Wallet";
 import Market from "./components/Market";
 import User from "./components/User";
 import logo from "./images/Zorro Cat Logo.png";
+import MarketIcon from "./components/MarketIcon";
 
-import {
-  AppstoreOutlined,
-  ContainerOutlined,
-  DesktopOutlined,
-  MailOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  PieChartOutlined,
-} from "@ant-design/icons";
+import { UserOutlined, SettingOutlined } from "@ant-design/icons";
 
 import { Layout, Flex, Button, Menu, MenuProps } from "antd";
-// import "antd/dist/antd.css";
 
 const { Header, Footer, Sider, Content } = Layout;
 
@@ -26,28 +18,31 @@ const headerStyle: React.CSSProperties = {
   height: 64,
   paddingInline: 48,
   lineHeight: "64px",
-  backgroundColor: "#4096ff",
+  backgroundColor: "#fff",
 };
 
 const contentStyle: React.CSSProperties = {
   textAlign: "center",
   minHeight: 120,
   lineHeight: "1.5em",
-  color: "#fff",
-  backgroundColor: "#0958d9",
+  color: "#2B2A29",
+  backgroundColor: "#fff",
 };
 
 const siderStyle: React.CSSProperties = {
   textAlign: "center",
   lineHeight: "120px",
   color: "#fff",
-  backgroundColor: "#1677ff",
+  backgroundColor: "#5D647B",
+  fontFamily: "broadacre-thin-4, sans-serif",
+  fontStyle: "normal",
+  fontWeight: 100,
 };
 
 const footerStyle: React.CSSProperties = {
   textAlign: "center",
-  color: "#fff",
-  backgroundColor: "#4096ff",
+  color: "#2B2A29",
+  backgroundColor: "#fff",
 };
 
 const layoutStyle = {
@@ -76,9 +71,11 @@ function getItem(
 }
 
 const items: MenuItem[] = [
-  getItem("Account", "account", <PieChartOutlined />),
-  getItem("Market", "market", <DesktopOutlined />),
+  getItem(<UserOutlined />, "account"),
+  getItem(<MarketIcon />, "market"),
 ];
+
+const settingsItems: MenuItem[] = [getItem(<SettingOutlined />, "settings")];
 
 function App() {
   let [accounts, setAccounts] = useState<string[]>([]);
@@ -88,11 +85,12 @@ function App() {
     console.log(key);
     switch (key) {
       case "account":
-        return <>
-          <Wallet accounts={accounts}></Wallet>
-          <User address={accounts[0]}></User>
-        </>
-        ;
+        return (
+          <>
+            <Wallet accounts={accounts}></Wallet>
+            <User address={accounts[0]}></User>
+          </>
+        );
       case "market":
         return <Market></Market>;
       default:
@@ -116,23 +114,37 @@ function App() {
 
   return (
     <Layout style={layoutStyle}>
-      <Sider width="25%" style={siderStyle}>
-        <img id="logo" src={logo} alt="logo"></img>
+      <Sider width="10%" style={siderStyle}>
+        <div style={{ display: "flex", flexFlow: "column", height: "100%" }}>
+          <img id="logo" src={logo} alt="logo"></img>
 
-        <Menu
-          selectedKeys={[selectedMenuItem]}
-          defaultSelectedKeys={["1"]}
-          defaultOpenKeys={["sub1"]}
-          mode="inline"
-          theme="dark"
-          items={items}
-          onClick={(e) => setSelectedMenuItem(e.key)}
-        ></Menu>
+          <Flex justify="space-between" vertical style={{ flexGrow: 1 }}>
+            <Menu
+              selectedKeys={[selectedMenuItem]}
+              mode="inline"
+              theme="dark"
+              style={{ backgroundColor: "#5D647B" }}
+              items={items}
+              onClick={(e) => setSelectedMenuItem(e.key)}
+            ></Menu>
+            <Menu
+              mode="inline"
+              theme="dark"
+              style={{ backgroundColor: "#5D647B" }}
+              items={settingsItems}
+            ></Menu>
+          </Flex>
+        </div>
       </Sider>
       <Layout>
         <Header style={headerStyle}>
           <Flex style={{ height: "100%" }} justify="flex-end" align="center">
-            <Button type="primary" id="wallet" onClick={connectWallet}>
+            <Button
+              type="primary"
+              style={{ backgroundColor: "#5D647B" }}
+              id="wallet"
+              onClick={connectWallet}
+            >
               Connect
             </Button>
           </Flex>
@@ -151,4 +163,5 @@ export default App;
 /*
 -------------------- References --------------------
 Ant Design - https://ant.design/
+Settings Icon on Bottom Menu - https://github.com/ant-design/ant-design/issues/13572
 */
