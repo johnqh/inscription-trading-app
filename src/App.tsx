@@ -5,6 +5,7 @@ import Market from "./components/Market";
 import User from "./components/User";
 import logo from "./images/Zorro Cat Logo.png";
 import MarketIcon from "./components/MarketIcon";
+import Home from "./components/Home";
 
 import { UserOutlined, SettingOutlined } from "@ant-design/icons";
 
@@ -80,6 +81,7 @@ const settingsItems: MenuItem[] = [getItem(<SettingOutlined />, "settings")];
 function App() {
   let [accounts, setAccounts] = useState<string[]>([]);
   const [selectedMenuItem, setSelectedMenuItem] = useState("Account");
+  const [showHomePage, setShowHomePage] = useState(true);
 
   const componentsSwitch = (key: string) => {
     console.log(key);
@@ -112,11 +114,17 @@ function App() {
     }
   }
 
+  useEffect(() => {
+    setShowHomePage(true);
+  }, []);
+
   return (
     <Layout style={layoutStyle}>
       <Sider width="10%" style={siderStyle}>
         <div style={{ display: "flex", flexFlow: "column", height: "100%" }}>
-          <img id="logo" src={logo} alt="logo"></img>
+          <a href="/">
+            <img id="logo" src={logo} alt="logo"></img>
+          </a>
 
           <Flex justify="space-between" vertical style={{ flexGrow: 1 }}>
             <Menu
@@ -150,6 +158,10 @@ function App() {
           </Flex>
         </Header>
         <Content style={contentStyle}>
+          {showHomePage &&
+            selectedMenuItem !== "account" &&
+            selectedMenuItem !== "market" &&
+            selectedMenuItem !== "settings" && <Home />}
           {componentsSwitch(selectedMenuItem)}
         </Content>
         <Footer style={footerStyle}></Footer>
