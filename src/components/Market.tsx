@@ -18,7 +18,7 @@ let apiPrefix = "http://localhost:3000";
 
 const apiKey = process.env.REACT_APP_API_KEY || "";
 const apiUrl =
-  "https://open-api-testnet.unisat.io/v1/indexer/brc20/list?start=0&limit=25";
+  "https://open-api-testnet.unisat.io/v1/indexer/brc20/list?start=0&limit=75";
 console.log("WALLET_PRIVATE_KEY:", process.env.REACT_APP_API_KEY);
 
 function Market() {
@@ -97,6 +97,7 @@ function Market() {
         expiration: values.expiration || null,
         expired: 0,
         txid: txid,
+        fulfilled: 0,
       };
 
       console.log(orderInfo);

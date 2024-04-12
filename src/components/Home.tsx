@@ -63,7 +63,7 @@ function Home() {
             </div>
           </div>
         </Col>
-        <Col span={12}>col-12</Col>
+        <Col span={12}></Col>
       </Row>
       <Row style={{ paddingTop: 140, color: "#5D647B", textAlign: "left" }}>
         <Col span={8} style={{ paddingLeft: 100 }}>
