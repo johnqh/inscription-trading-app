@@ -1,4 +1,3 @@
-import React from "react";
 import { Row, Col, Button, Space } from "antd";
 import {
   BookOutlined,
@@ -47,8 +46,7 @@ function Home() {
           <br />
           <br />
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Button href="#market">Trade Now</Button>
-
+            <Button>Trade Now</Button>
             <div
               style={{
                 color: "#5D647B",

@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import Wallet from "./components/Wallet";
 import Market from "./components/Market";
+import Nft from "./components/Nft";
 import User from "./components/User";
 import logo from "./images/Zorro Cat Logo.png";
 import MarketIcon from "./components/MarketIcon";
 import Home from "./components/Home";
 
-import { UserOutlined, SettingOutlined } from "@ant-design/icons";
+import { UserOutlined, SettingOutlined, TrademarkOutlined } from "@ant-design/icons";
 
 import { Layout, Flex, Button, Menu, MenuProps } from "antd";
 
@@ -74,6 +75,7 @@ function getItem(
 const items: MenuItem[] = [
   getItem(<UserOutlined />, "account"),
   getItem(<MarketIcon />, "market"),
+  getItem(<TrademarkOutlined />, "nft"),
 ];
 
 const settingsItems: MenuItem[] = [getItem(<SettingOutlined />, "settings")];
@@ -81,7 +83,6 @@ const settingsItems: MenuItem[] = [getItem(<SettingOutlined />, "settings")];
 function App() {
   let [accounts, setAccounts] = useState<string[]>([]);
   const [selectedMenuItem, setSelectedMenuItem] = useState("Account");
-  const [showHomePage, setShowHomePage] = useState(true);
 
   const componentsSwitch = (key: string) => {
     console.log(key);
@@ -95,6 +96,8 @@ function App() {
         );
       case "market":
         return <Market></Market>;
+      case "nft":
+        return <Nft></Nft>;
       default:
         break;
     }
@@ -113,10 +116,6 @@ function App() {
       console.log("connect failed");
     }
   }
-
-  useEffect(() => {
-    setShowHomePage(true);
-  }, []);
 
   return (
     <Layout style={layoutStyle}>
@@ -158,9 +157,9 @@ function App() {
           </Flex>
         </Header>
         <Content style={contentStyle}>
-          {showHomePage &&
-            selectedMenuItem !== "account" &&
+          {selectedMenuItem !== "account" &&
             selectedMenuItem !== "market" &&
+            selectedMenuItem !== "nft" &&
             selectedMenuItem !== "settings" && <Home />}
           {componentsSwitch(selectedMenuItem)}
         </Content>
