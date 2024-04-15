@@ -6,7 +6,7 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 
-function Home() {
+function Home({setMenuItem }: {setMenuItem: (item: string) => void}) {
   return (
     <>
       <Row style={{ paddingTop: 50 }}>
@@ -47,7 +47,9 @@ function Home() {
           <br />
           <br />
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Button href="#market">Trade Now</Button>
+            <Button onClick={() => {
+              setMenuItem("market");
+            }}>Trade Now</Button>
 
             <div
               style={{

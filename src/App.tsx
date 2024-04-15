@@ -10,6 +10,7 @@ import Home from "./components/Home";
 import { UserOutlined, SettingOutlined } from "@ant-design/icons";
 
 import { Layout, Flex, Button, Menu, MenuProps } from "antd";
+import { useLocation } from "react-router-dom";
 
 const { Header, Footer, Sider, Content } = Layout;
 
@@ -80,12 +81,18 @@ const settingsItems: MenuItem[] = [getItem(<SettingOutlined />, "settings")];
 
 function App() {
   let [accounts, setAccounts] = useState<string[]>([]);
-  const [selectedMenuItem, setSelectedMenuItem] = useState("Account");
-  const [showHomePage, setShowHomePage] = useState(true);
+  console.log(window.location.href);
+  const [selectedMenuItem, setSelectedMenuItem] = useState("home");
+
+  const setMenuItem = (item: string) => {
+    setSelectedMenuItem(item);
+  }
 
   const componentsSwitch = (key: string) => {
     console.log(key);
     switch (key) {
+      case "home":
+        return <Home setMenuItem={setMenuItem} ></Home>;
       case "account":
         return (
           <>
@@ -114,9 +121,10 @@ function App() {
     }
   }
 
-  useEffect(() => {
-    setShowHomePage(true);
-  }, []);
+  // const location = useLocation();
+  // useEffect(() => {
+  //   console.log(location);
+  // }, [location.pathname]);
 
   return (
     <Layout style={layoutStyle}>
@@ -158,10 +166,6 @@ function App() {
           </Flex>
         </Header>
         <Content style={contentStyle}>
-          {showHomePage &&
-            selectedMenuItem !== "account" &&
-            selectedMenuItem !== "market" &&
-            selectedMenuItem !== "settings" && <Home />}
           {componentsSwitch(selectedMenuItem)}
         </Content>
         <Footer style={footerStyle}></Footer>

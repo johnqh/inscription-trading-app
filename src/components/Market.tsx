@@ -231,7 +231,7 @@ function Market() {
                 label="Price"
                 name="price"
                 rules={[
-                  { required: false, message: "Please enter a limit price." },
+                  { required: true, message: "Please enter a limit price." },
                 ]}
               >
                 <Input />
