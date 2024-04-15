@@ -16,13 +16,8 @@ import {
 
 let apiPrefix = "http://localhost:3000";
 
-const apiKey = process.env.REACT_APP_API_KEY || "";
-const apiUrl =
-  "https://open-api-testnet.unisat.io/v1/indexer/brc20/list?start=0&limit=75";
-console.log("WALLET_PRIVATE_KEY:", process.env.REACT_APP_API_KEY);
-
 function Market() {
-  const [tokens, setTokens] = useState<any[]>([]);
+  const [tokens, setTokens] = useState<string[]>([]);
   const [orderType, setOrderType] = useState("buy");
   const [selectedToken, setSelectedToken] = useState("");
 
@@ -30,12 +25,7 @@ function Market() {
     let responseData: any; // Define a variable to store the response data
 
     try {
-      const response = await axios.get(apiUrl, {
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-      });
+      const response = await axios.get(apiPrefix + "/deploy");
       responseData = response.data;
     } catch (error: any) {
       console.error("Error:", error.message);
@@ -44,7 +34,7 @@ function Market() {
 
     console.log("-----RESPONSE DATA-----");
     console.log(responseData);
-    setTokens(responseData.data.detail);
+    setTokens(responseData);
     console.log("LENGTH: " + tokens.length);
   }
 
