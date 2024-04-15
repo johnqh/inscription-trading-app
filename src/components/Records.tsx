@@ -44,7 +44,9 @@ function Records({ records }: { records: Record[] }) {
           renderItem={(record) => {
             let date = new Date(record.datetime);
             let price: string = (record.price) ? `${record.price}` : "market price";
-            return (<p>{record.action} {record.token_size} {record.token} at {price} <em>(Updated {date.toLocaleString()})</em></p>)
+            let btc_amount = (record.btc_amount) ? `(${record.btc_amount} BTC)` : "";
+            let fee = (record.fee) ? ` (Fee: ${record.fee})` : "";
+            return (<p>{record.action} {record.token_size} {record.token} at {price}{btc_amount}{fee} <em>(Updated {date.toLocaleString()})</em></p>)
           }}
         >
         </List>
