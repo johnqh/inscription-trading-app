@@ -29,14 +29,15 @@ function Nft() {
       const address = addresses ? addresses[0] : null;
 
       let orderInfo = {
-        address: address,
+        seller_address: address,
+        buyer_address: address || null,
         inscriptionNumber: inscriptionNumber,
         inscriptionID: inscriptionID,
         genesisHeight: genesisHeight,
         outputValue: outputValue,
         // side: orderType === "buy" ? 1 : 0,
         price: inscriptionPrice,
-        // expiration: values.expiration || null,
+        expiration: null,
         expired: 0,
         txid: txid,
         fulfilled: 0,
