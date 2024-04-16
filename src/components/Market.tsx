@@ -80,7 +80,7 @@ function Market({ address }: { address: string }) {
   // Update if the ordertype changes
   useEffect(() => {
     getTokens();
-  }, [orderType, address, holdings]);
+  }, [orderType, address]);
 
   type FieldType = {
     size?: number;
