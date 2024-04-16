@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./App.css";
 import Wallet from "./components/Wallet";
 import Market from "./components/Market";
@@ -10,7 +10,6 @@ import Home from "./components/Home";
 import { UserOutlined, SettingOutlined } from "@ant-design/icons";
 
 import { Layout, Flex, Button, Menu, MenuProps } from "antd";
-import { useLocation } from "react-router-dom";
 
 const { Header, Footer, Sider, Content } = Layout;
 
@@ -81,27 +80,35 @@ const settingsItems: MenuItem[] = [getItem(<SettingOutlined />, "settings")];
 
 function App() {
   let [accounts, setAccounts] = useState<string[]>([]);
-  console.log(window.location.href);
   const [selectedMenuItem, setSelectedMenuItem] = useState("home");
+  const [selectedToken, setSelectedToken] = useState(""); // Initially defined in the Market component, we now need to define it here to have tokens on the account page that can link to that specific token's market page.
 
   const setMenuItem = (item: string) => {
     setSelectedMenuItem(item);
-  }
+  };
 
   const componentsSwitch = (key: string) => {
-    console.log(key);
     switch (key) {
       case "home":
-        return <Home setMenuItem={setMenuItem} ></Home>;
+        return <Home setMenuItem={setMenuItem}></Home>;
       case "account":
         return (
           <>
             <Wallet accounts={accounts}></Wallet>
-            <User address={accounts[0]}></User>
+            <User
+              address={accounts[0]}
+              setMenuItem={setMenuItem}
+              setSelectedToken={setSelectedToken}
+            ></User>
           </>
         );
       case "market":
-        return <Market></Market>;
+        return (
+          <Market
+            selectedToken={selectedToken}
+            setSelectedToken={setSelectedToken}
+          ></Market>
+        );
       default:
         break;
     }
@@ -120,11 +127,6 @@ function App() {
       console.log("connect failed");
     }
   }
-
-  // const location = useLocation();
-  // useEffect(() => {
-  //   console.log(location);
-  // }, [location.pathname]);
 
   return (
     <Layout style={layoutStyle}>
@@ -178,6 +180,14 @@ export default App;
 
 /*
 -------------------- References --------------------
-Ant Design - https://ant.design/
+Layout - https://ant.design/components/layout
+Popover - https://ant.design/components/popover
+Icon - https://ant.design/components/icon
+Flex - https://ant.design/components/flex
+Menu - https://ant.design/components/menu
+Button - https://ant.design/components/button
+UniSat Wallet API - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet
 Settings Icon on Bottom Menu - https://github.com/ant-design/ant-design/issues/13572
+Pass Function as Prop - https://stackoverflow.com/questions/68895112/how-to-pass-function-as-a-prop-in-react-typescript
+Sharing State Between Components - https://react.dev/learn/sharing-state-between-components
 */

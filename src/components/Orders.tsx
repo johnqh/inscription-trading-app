@@ -19,7 +19,12 @@ const customizeRenderEmpty = () => (
   </div>
 );
 
-function Orders({ orders, title }: { orders: Order[], title: string }) {
+interface OrdersProps {
+  orders: Order[];
+  title: string;
+}
+
+function Orders({ orders, title }: OrdersProps) {
   const headStyle = {
     backgroundColor: "#5D647B",
     color: "#f5f5f5",
@@ -63,3 +68,11 @@ function Orders({ orders, title }: { orders: Order[], title: string }) {
 }
 
 export default Orders;
+
+/*
+-------------------- References -------------------- 
+List - https://ant.design/components/list
+Card - https://ant.design/components/card
+Space - https://ant.design/components/space
+CustomizeRenderEmpty() - https://ant.design/components/empty
+*/

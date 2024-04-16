@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, List, ConfigProvider, Space } from "antd";
 import { FrownOutlined } from "@ant-design/icons";
-import axios from "axios"; // HTTP requests
 
 export type Holding = {
   tick: string;
@@ -17,14 +16,14 @@ const customizeRenderEmpty = () => (
   </div>
 );
 
-let unisat = (window as any).unisat;
+interface HoldingsProps {
+  holdings: Holding[];
+  setMenuItem: (item: string) => void; // Allows setting up where a button or a hyperlink can link.
+  setSelectedToken: (token: string) => void; // Want to link to the market of the selected token the user selects
+}
 
-function Holdings({ holdings }: { holdings: Holding[] }) {
+function Holdings({ holdings, setMenuItem, setSelectedToken }: HoldingsProps) {
   const [totalTokens, setTotalTokens] = useState(0);
-  const [inscriptions, setInscriptions] = useState({
-    list: Array(0),
-    total: 0,
-  });
   const [tick, setTick] = useState<any[]>([]);
 
   async function getSummary() {
@@ -33,10 +32,24 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
 
     for (let token of holdings) {
       console.log(token);
+
+      // If 0, Don't Include Token in User's Token List
+      if (token.amt === 0) {
+        continue;
+      }
+
       elements.push(
         <div>
           <span>
-            <a style={{ color: "inherit" }} href="/">
+            <a
+              style={{ color: "inherit" }}
+              href="#"
+              onClick={(e) => {
+                e.preventDefault(); // To avoid href linking instead want setMenuItem to do so
+                setMenuItem("market");
+                setSelectedToken(token.tick);
+              }}
+            >
               {token.tick}: {token.amt}
             </a>
           </span>
@@ -53,23 +66,6 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
 
   useEffect(() => {
     getSummary();
-
-    // Get User's List of Inscriptions
-    async function getAccountsInscriptions() {
-      try {
-        setInscriptions(await unisat.getInscriptions());
-
-        if (inscriptions.list.length === 0) {
-          console.log("YOU HAVE NO INSCRIPTIONS");
-        }
-
-        return inscriptions;
-      } catch (e) {
-        console.log(e);
-      }
-    }
-
-    getAccountsInscriptions();
   }, [holdings]);
 
   const headStyle = {
@@ -103,3 +99,12 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
 }
 
 export default Holdings;
+
+/*
+-------------------- References -------------------- 
+List - https://ant.design/components/list
+Card - https://ant.design/components/card
+Space - https://ant.design/components/space
+CustomizeRenderEmpty() - https://ant.design/components/empty
+Props Interface - https://www.geeksforgeeks.org/react-js-blueprint-suggest-props-interface/#
+*/

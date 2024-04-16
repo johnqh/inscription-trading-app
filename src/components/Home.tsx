@@ -1,4 +1,3 @@
-import React from "react";
 import { Row, Col, Button, Space } from "antd";
 import {
   BookOutlined,
@@ -6,17 +5,21 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 
-function Home({setMenuItem }: {setMenuItem: (item: string) => void}) {
+interface HomeProps {
+  setMenuItem: (item: string) => void; // Allows setting up where a button or a hyperlink can link to a different page.
+}
+
+function Home({ setMenuItem }: HomeProps) {
   return (
     <>
       <Row style={{ paddingTop: 50 }}>
+        {/* ------------------------------ Value Proposition ------------------------------  */}
         <Col
           span={12}
           style={{
             display: "flex",
             flexDirection: "column",
             paddingLeft: 100,
-
             justifyContent: "center",
           }}
         >
@@ -46,10 +49,15 @@ function Home({setMenuItem }: {setMenuItem: (item: string) => void}) {
           </div>
           <br />
           <br />
+          {/* ------------------------------ Action ------------------------------  */}
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Button onClick={() => {
-              setMenuItem("market");
-            }}>Trade Now</Button>
+            <Button
+              onClick={() => {
+                setMenuItem("market");
+              }}
+            >
+              Trade Now
+            </Button>
 
             <div
               style={{
@@ -68,6 +76,7 @@ function Home({setMenuItem }: {setMenuItem: (item: string) => void}) {
         <Col span={12}></Col>
       </Row>
       <Row style={{ paddingTop: 140, color: "#5D647B", textAlign: "left" }}>
+        {/* ------------------------------ Features ------------------------------  */}
         <Col span={8} style={{ paddingLeft: 100 }}>
           <Space style={{ fontWeight: "bold" }}>
             <SlidersOutlined />
@@ -109,7 +118,8 @@ export default Home;
 
 /*
 -------------------- References --------------------
-Grid - https://ant.design/components/grid
+Grid (Row, Col) - https://ant.design/components/grid
 Space - https://ant.design/components/space
 Icons - https://ant.design/components/icon
+Props Interface - https://www.geeksforgeeks.org/react-js-blueprint-suggest-props-interface/#
 */

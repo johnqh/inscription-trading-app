@@ -16,15 +16,21 @@ import {
 
 let apiPrefix = "http://localhost:3000";
 
-function Market() {
+interface MarketProps {
+  selectedToken: string;
+  setSelectedToken: (token: string) => void;
+}
+
+function Market({ selectedToken, setSelectedToken }: MarketProps) {
   const [tokens, setTokens] = useState<string[]>([]);
   const [orderType, setOrderType] = useState("buy");
-  const [selectedToken, setSelectedToken] = useState("");
+  // const [selectedToken, setSelectedToken] = useState("");
 
   async function getTokens() {
     let responseData: any; // Define a variable to store the response data
 
     try {
+      // Getting List of BRC-20 Tokens from Database (UniSat API)
       const response = await axios.get(apiPrefix + "/deploy");
       responseData = response.data;
     } catch (error: any) {
@@ -45,16 +51,27 @@ function Market() {
     getTokens();
   }, []);
 
+  // Field Type's for Order Form
   type FieldType = {
     size?: number;
     price?: number;
     expiration?: number;
   };
 
+  // When a User Clicks Buy or Sell on Order Form
   const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
     try {
       let txid = "";
+
+      // Make Sure the User Selects a Specific Token to Buy or Sell
+      if (selectedToken === "") {
+        alert("Oops! You didn't select a token.");
+        return;
+      }
+
+      // Buyer Paying for BRC-20 Token
       if (orderType === "buy" && values.size && values.price) {
+        // Buyer Sends Payment (BTC) to the Exchange
         txid = await unisat.sendBitcoin(
           "tb1qeuzkvusgyxekclxwzjl49n9g30ankw60ly2l5m",
           values.size * values.price,
@@ -63,11 +80,14 @@ function Market() {
       } else if (orderType === "sell" && values.size && values.price) {
         console.log(selectedToken);
         console.log(values.size);
-        // Transfer Token
+
+        // Seller Inscribes Transfer (Pays UniSat for this Service)
         const inscription = await unisat.inscribeTransfer(
           selectedToken,
           String(values.size)
         );
+
+        // Seller Sends BRC-20 to the Exchange
         txid = await unisat.sendInscription(
           "tb1qeuzkvusgyxekclxwzjl49n9g30ankw60ly2l5m",
           inscription.inscriptionId,
@@ -75,6 +95,7 @@ function Market() {
         );
       }
 
+      // User's Address
       const addresses = await unisat.getAccounts();
       const address = addresses ? addresses[0] : null;
 
@@ -94,6 +115,7 @@ function Market() {
 
       console.log("Success:", values);
 
+      // Create Order in the Database
       await axios.post(apiPrefix + "/orders", orderInfo);
     } catch (e: any) {
       console.log(e);
@@ -107,6 +129,7 @@ function Market() {
     console.log("Failed:", errorInfo);
   };
 
+  /* ------------------------- Mouse Events ------------------------- */
   const confirmBid = (e?: React.MouseEvent<HTMLElement>) => {
     console.log(e);
     message.success("Knock on wood! Your bid was added to the order book.");
@@ -150,7 +173,9 @@ function Market() {
   return (
     <>
       <Space direction="vertical" size="middle" style={{ display: "flex" }}>
-        <Row style={{ maxHeight: "600px", overflowY: "scroll" }}>
+        <Row
+          style={{ maxHeight: "600px", overflowY: "scroll", paddingTop: 50 }}
+        >
           {/* ------------------------- List of Tokens ------------------------- */}
           <Col span={8}>
             <List
@@ -289,7 +314,6 @@ function Market() {
                       type="primary"
                       htmlType="submit"
                       style={{ backgroundColor: "#5D647B" }}
-                      // onClick={sendBTC}
                     >
                       Buy
                     </Button>
@@ -307,7 +331,6 @@ function Market() {
                       type="primary"
                       htmlType="submit"
                       style={{ backgroundColor: "#5D647B" }}
-                      // onClick={sendBRC}
                     >
                       Sell
                     </Button>
@@ -331,6 +354,7 @@ List - https://ant.design/components/list
 Form - https://ant.design/components/form
 Button - https://ant.design/components/button
 Ponconfirm - https://ant.design/components/popconfirm
-UniSat - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet#sendbitcoin
+UniSat Wallet API - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet#sendbitcoin
 Overflow Scroll - https://developer.mozilla.org/en-US/docs/Web/CSS/overflow
+Props Interface - https://www.geeksforgeeks.org/react-js-blueprint-suggest-props-interface/#
 */
