@@ -1,19 +1,53 @@
-import React from "react";
+import React, {useState} from "react";
+import axios from "axios";
 import { Button, Card, Col, Row, Space } from "antd";
 import Meta from "antd/es/card/Meta";
 import btcLogo from "../images/btc-logo.png";
 
 const contentPrefix = "https://static-testnet.unisat.io/content";
-const inscriptionID =
-  "0451d8f8f3181834262df077420d1c8701791c81345f17a8410e07e7c649e92ei0";
-const inscriptionNumber = "#3524564";
-const inscriptionName = "ZORO";
-const inscriptionPrice = "3023";
-const genesisHeight = "2586257";
-const outputValue = "3000";
+let inscriptionName = "ZORO";
+let inscriptionPrice = "3023";
+
+let inscriptions: any[] = [];
+
+let apiPrefix = "http://localhost:3000";
+let address: string;
 
 function Nft() {
+  // const [content, setContent] = useState("");
+  const [inscriptionID, setInscriptionID] = useState("");
+  const [inscriptionNumber, setInscriptionNumber] = useState(0);
   let unisat = (window as any).unisat;
+
+  async function getNFT() {
+    try {
+      let addressRes = await unisat.getAccounts();
+      address = addressRes[0];
+      console.log("-----ADDRESS-----");
+      console.log(address);
+
+      const response = await axios.get(
+        apiPrefix + `/holdings/nft?address=${address}`
+      );
+      inscriptions = response.data;
+      console.log("-----INSCRIPTIONS-----");
+      console.log(inscriptions);
+      setInscriptionID(inscriptions[1].inscriptionId);
+      setInscriptionNumber(inscriptions[1].inscriptionNumber);
+      console.log(inscriptionID);
+      console.log(inscriptionNumber);
+
+      console.log("-----INSCRIPTION ID LINK-----");
+      console.log(`${contentPrefix}/${inscriptionID}`);
+
+      console.log("-----INSCRIPTION ID-----");
+      console.log(inscriptionID);
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  getNFT();
 
   async function buyNFT() {
     try {
@@ -33,9 +67,6 @@ function Nft() {
         buyer_address: address || null,
         inscriptionNumber: inscriptionNumber,
         inscriptionID: inscriptionID,
-        genesisHeight: genesisHeight,
-        outputValue: outputValue,
-        // side: orderType === "buy" ? 1 : 0,
         price: inscriptionPrice,
         expiration: null,
         expired: 0,
@@ -74,7 +105,7 @@ function Nft() {
                   <img
                     alt={`inscription: ${inscriptionNumber}`}
                     src={`${contentPrefix}/${inscriptionID}`}
-                    style={{}}
+                    style={{height: "120px", width: "120px"}}
                     loading="lazy"
                     decoding="async"
                   />
@@ -291,6 +322,7 @@ export default Nft;
 Grid - https://ant.design/components/grid
 Card - https://ant.design/components/card
 UniSat Wallet API - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet
+UniSat API Endpoints - https://open-api-testnet.unisat.io/swagger.html
 Inscription Example - https://testnet.unisat.io/inscription/0451d8f8f3181834262df077420d1c8701791c81345f17a8410e07e7c649e92ei0
 Marketplace Example - https://www.gate.io/web3/inscription-market/bitcoin/brc-nft
 */
