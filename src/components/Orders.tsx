@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { List, Card, ConfigProvider, Space } from "antd";
 import { FrownOutlined } from "@ant-design/icons";
 
@@ -26,6 +27,14 @@ function Orders({ orders, title }: { orders: Order[], title: string }) {
   };
 
   console.log(orders);
+  const [totalTokens, setTotalTokens] = useState(0);
+
+  useEffect(() => {
+    let tokens = 0;
+    orders.forEach((order) => tokens += order.amt);
+    setTotalTokens(tokens);
+  }, [orders]);
+
 
   return (
     <div>
@@ -36,7 +45,7 @@ function Orders({ orders, title }: { orders: Order[], title: string }) {
           bordered={true}
           style={{}}
         >
-          {orders.length}
+          {totalTokens}
         </Card>
         <ConfigProvider renderEmpty={customizeRenderEmpty}>
           <List

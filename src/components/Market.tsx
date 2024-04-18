@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios"; // HTTP requests
+import userService from "../services/user";
+
 import {
   Button,
   List,
@@ -21,39 +23,64 @@ const apiUrl =
   "https://open-api-testnet.unisat.io/v1/indexer/brc20/list?start=0&limit=25";
 console.log("WALLET_PRIVATE_KEY:", process.env.REACT_APP_API_KEY);
 
-function Market() {
+function Market({ address }: { address: string }) {
   const [tokens, setTokens] = useState<any[]>([]);
   const [orderType, setOrderType] = useState("buy");
   const [selectedToken, setSelectedToken] = useState("");
+  const [holdings, setHoldings] = useState<any[]>([]);
+  const [dispText, setDispText] = useState("");
+
+  // Outside of the function to help cache
+  let responseData: any = null; // Define a variable to store the response data
+  let sellList: string[] = []; // Variable to store list of sellable tokens
 
   async function getTokens() {
-    let responseData: any; // Define a variable to store the response data
 
-    try {
-      const response = await axios.get(apiUrl, {
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
+    // only sell tokens that a user has
+    if (orderType === "buy") {
+      try {
+        if (!responseData) { // Try to cache data fetched
+          const response = await axios.get(apiUrl, {
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${apiKey}`,
+            },
+          });
+          responseData = response.data.data.detail;
+        }
+      } catch (error: any) {
+          console.error("Error:", error.message);
+          return null;
+      }
+      console.log("-----RESPONSE DATA-----");
+      console.log(responseData);
+      setTokens(responseData);
+      setDispText("Top BRC-20 Tokens");
+      console.log("LENGTH: " + tokens.length);
+    } else {
+      if (holdings.length === 0) {
+        userService.getHoldings(address).then((data) => {
+            setHoldings(data);
+        });
+      }
+
+      holdings.forEach((holding) => {
+        if (holding.amt > 0) {
+          sellList.push(holding.tick)
+        }
       });
-      responseData = response.data;
-    } catch (error: any) {
-      console.error("Error:", error.message);
-      return null;
-    }
 
-    console.log("-----RESPONSE DATA-----");
-    console.log(responseData);
-    setTokens(responseData.data.detail);
-    console.log("LENGTH: " + tokens.length);
+      setTokens(sellList);
+      setDispText("Your Tokens");
+    }
   }
 
   let unisat = (window as any).unisat;
 
-  // Makes Sure Updates Only Happen Once
+  // Update if the ordertype changes
   useEffect(() => {
     getTokens();
-  }, []);
+  }, [orderType, address]);
 
   type FieldType = {
     size?: number;
@@ -163,7 +190,7 @@ function Market() {
           {/* ------------------------- List of Tokens ------------------------- */}
           <Col span={8}>
             <List
-              header={<div>Top BRC-20 Tokens</div>}
+              header={<div>{dispText}</div>}
               bordered
               dataSource={tokens}
               renderItem={(token) => (
