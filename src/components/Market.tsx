@@ -12,14 +12,22 @@ import {
   message,
   Popconfirm,
   Space,
+  DatePicker,
 } from "antd";
+
+// Imports for Expiration Part of the Form
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
+
+const dateFormat = "YYYY-MM-DD";
 
 let apiPrefix = "http://localhost:3000";
 
 const apiKey = process.env.REACT_APP_API_KEY || "";
 const apiUrl =
   "https://open-api-testnet.unisat.io/v1/indexer/brc20/list?start=0&limit=75";
-console.log("WALLET_PRIVATE_KEY:", process.env.REACT_APP_API_KEY);
 
 function Market() {
   const [tokens, setTokens] = useState<any[]>([]);
@@ -159,8 +167,36 @@ function Market() {
 
   return (
     <>
+      <div
+        style={{
+          textAlign: "left",
+          paddingLeft: 100,
+          paddingTop: 30,
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "50px",
+            lineHeight: "1.2",
+            fontWeight: "600",
+            color: "#5D647B",
+          }}
+        >
+          BRC-20 Tokens
+        </h1>
+        <p style={{ paddingTop: 0, color: "#5D647B" }}>
+          Bitcoin Ordinal Inscriptions & Trading
+        </p>
+      </div>
       <Space direction="vertical" size="middle" style={{ display: "flex" }}>
-        <Row style={{ maxHeight: "600px", overflowY: "scroll" }}>
+        <Row
+          style={{
+            maxHeight: "600px",
+            overflowY: "scroll",
+            marginTop: 50,
+            paddingLeft: 100,
+          }}
+        >
           {/* ------------------------- List of Tokens ------------------------- */}
           <Col span={8}>
             <List
@@ -197,7 +233,7 @@ function Market() {
               name="basic"
               labelCol={{ span: 8 }}
               wrapperCol={{ span: 16 }}
-              style={{ maxWidth: 600 }}
+              style={{ maxWidth: 600, marginRight: 60 }}
               initialValues={{ remember: true }}
               onFinish={onFinish}
               onFinishFailed={onFinishFailed}
@@ -231,7 +267,7 @@ function Market() {
                 label="Price"
                 name="price"
                 rules={[
-                  { required: false, message: "Please enter a limit price." },
+                  { required: true, message: "Please enter a limit price." },
                 ]}
               >
                 <Input />
@@ -247,7 +283,10 @@ function Market() {
                   },
                 ]}
               >
-                <Input />
+                <DatePicker
+                  minDate={dayjs("2024-04-01", dateFormat)}
+                  maxDate={dayjs("2025-10-31", dateFormat)}
+                />
               </Form.Item>
 
               <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
@@ -341,6 +380,7 @@ List - https://ant.design/components/list
 Form - https://ant.design/components/form
 Button - https://ant.design/components/button
 Ponconfirm - https://ant.design/components/popconfirm
+DatePicker - https://ant.design/components/date-picker
 UniSat - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet#sendbitcoin
 Overflow Scroll - https://developer.mozilla.org/en-US/docs/Web/CSS/overflow
 */

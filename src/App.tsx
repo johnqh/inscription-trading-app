@@ -145,7 +145,7 @@ function App() {
       </Sider>
       <Layout>
         <Header style={headerStyle}>
-          <Flex style={{ height: "100%" }} justify="flex-end" align="center">
+          <Flex style={{ height: "100%", paddingTop: 20 }} justify="flex-end" align="center">
             <Button
               type="primary"
               style={{ backgroundColor: "#5D647B" }}

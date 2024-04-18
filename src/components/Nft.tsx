@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Button, Card, Col, Row, Space } from "antd";
 import Meta from "antd/es/card/Meta";
@@ -8,47 +8,42 @@ const contentPrefix = "https://static-testnet.unisat.io/content";
 let inscriptionName = "ZORO";
 let inscriptionPrice = "3023";
 
-let inscriptions: any[] = [];
-
 let apiPrefix = "http://localhost:3000";
 let address: string;
 
 function Nft() {
-  // const [content, setContent] = useState("");
-  const [inscriptionID, setInscriptionID] = useState("");
-  const [inscriptionNumber, setInscriptionNumber] = useState(0);
+  const [inscriptions, setInscriptions] = useState<any[]>([]);
+
   let unisat = (window as any).unisat;
 
   async function getNFT() {
     try {
-      let addressRes = await unisat.getAccounts();
-      address = addressRes[0];
-      console.log("-----ADDRESS-----");
-      console.log(address);
+      // User's Address
+      let addressResponse = await unisat.getAccounts();
+      address = addressResponse[0];
 
+      // Retreive User's Inscription from Database (UniSat API)
       const response = await axios.get(
         apiPrefix + `/holdings/nft?address=${address}`
       );
-      inscriptions = response.data;
-      console.log("-----INSCRIPTIONS-----");
-      console.log(inscriptions);
-      setInscriptionID(inscriptions[1].inscriptionId);
-      setInscriptionNumber(inscriptions[1].inscriptionNumber);
-      console.log(inscriptionID);
-      console.log(inscriptionNumber);
 
-      console.log("-----INSCRIPTION ID LINK-----");
-      console.log(`${contentPrefix}/${inscriptionID}`);
+      console.log("-----RESPONSE-----");
+      console.log(response.data);
 
-      console.log("-----INSCRIPTION ID-----");
-      console.log(inscriptionID);
+      // User's Inscriptions (Not including BRC-20)
+      setInscriptions(response.data);
     } catch (e) {
       console.log(e);
     }
   }
 
-  getNFT();
+  // Seller's Order Details
+  async function sellNFT()
+  {
 
+  }
+
+  // Buyer's Order Details
   async function buyNFT() {
     try {
       let txid = "";
@@ -65,8 +60,8 @@ function Nft() {
       let orderInfo = {
         seller_address: address,
         buyer_address: address || null,
-        inscriptionNumber: inscriptionNumber,
-        inscriptionID: inscriptionID,
+        // inscriptionNumber: inscriptions.inscriptionNumber,
+        // inscriptionID: inscriptions.inscriptionId,
         price: inscriptionPrice,
         expiration: null,
         expired: 0,
@@ -80,235 +75,170 @@ function Nft() {
     }
   }
 
+  // Makes Sure Updates Only Happen Once
+  useEffect(() => {
+    getNFT();
+  }, []);
+
   return (
     <>
+      <div
+        style={{
+          textAlign: "left",
+          paddingLeft: 100,
+          paddingTop: 30,
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "50px",
+            lineHeight: "1.2",
+            fontWeight: "600",
+            color: "#5D647B",
+          }}
+        >
+          <span>Bitcoin</span> NFTs
+        </h1>
+        <p style={{ paddingTop: 0, color: "#5D647B" }}>
+          Bitcoin Ordinal Inscriptions & Trading
+        </p>
+      </div>
+
       <div
         style={{
           display: "flex",
           justifyContent: "center",
           paddingTop: 50,
+          paddingLeft: 100,
+          overflowY: "scroll",
         }}
       >
-        <Row gutter={5}>
-          <Col span={8}>
-            <Card
-              hoverable
-              style={{ width: 240 }}
-              cover={
-                <div
-                  style={{
-                    border: "1px solid grey",
-                    borderRadius: "8px",
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <img
-                    alt={`inscription: ${inscriptionNumber}`}
-                    src={`${contentPrefix}/${inscriptionID}`}
-                    style={{height: "120px", width: "120px"}}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-              }
-            >
-              <Space>
-                <Meta
-                  title={
-                    <div className="titleLeftAlign">
-                      {inscriptionName} {inscriptionNumber}
-                    </div>
-                  }
-                  description={
-                    <div style={{ marginTop: "30px" }}>
-                      <img
-                        id="logo"
-                        src={btcLogo}
-                        style={{
-                          height: "20px",
-                          width: "20px",
-                        }}
-                        alt="btc-logo"
-                      ></img>
+        <Row gutter={60}>
+          {inscriptions.map((inscription) => (
+            <Col span={4.8} key={inscription.inscriptionId}>
+              <Card
+                hoverable
+                style={{
+                  width: "220px",
+                  height: "356px",
+                  // backgroundColor: "#f5f5f5",
+                  border: "1px solid #2b2a29",
+                }}
+                cover={
+                  <div
+                    style={{
+                      // border: "1px solid grey",
+                      // borderRadius: "8px",
+                      // boxSizing: "border-box",
+                      backgroundSize: "cover",
+                      width: "100%",
+                      // height: "120px",
+                      // backgroundColor: "#5D647B",
+                    }}
+                  >
+                    {" "}
+                    <div
+                      className="titleLeftAlign"
+                      style={{
+                        paddingTop: "0px",
+                        marginTop: "10px",
+                      }}
+                    >
                       <span
                         style={{
-                          color: "#5D647B",
-                          fontWeight: "600",
-                          fontSize: "14px",
-                          marginLeft: "2px",
-                          marginTop: "13px",
                           textAlign: "left",
+                          fontWeight: "600",
+                          color: "#2b2a29",
                         }}
                       >
-                        {" "}
-                        {inscriptionPrice}
+                        {inscriptionName}
                       </span>
-
                       <span
                         style={{
                           color: "#5D647B",
                           fontWeight: "bold",
-                          fontSize: "10px",
+                          fontSize: "11px",
                           marginLeft: "2px",
                         }}
                       >
-                        sats
+                        #
+                      </span>
+                      <span style={{ textAlign: "left", color: "#2b2a29" }}>
+                        {inscription.inscriptionNumber}
                       </span>
                     </div>
-                  }
-                />
-              </Space>
-              <Button style={{ width: "100%" }} onClick={buyNFT}>
-                Buy
-              </Button>
-            </Card>
-          </Col>
-          <Col span={8}>
-            <Card
-              hoverable
-              style={{ width: 240 }}
-              cover={
-                <div
-                  style={{
-                    border: "1px solid grey",
-                    borderRadius: "8px",
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <img
-                    alt={`inscription: ${inscriptionNumber}`}
-                    src={`${contentPrefix}/${inscriptionID}`}
-                    style={{}}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-              }
-            >
-              <Space>
-                <Meta
-                  title={
-                    <div className="titleLeftAlign">
-                      {inscriptionName} {inscriptionNumber}
-                    </div>
-                  }
-                  description={
-                    <div style={{ marginTop: "30px" }}>
-                      <img
-                        id="logo"
-                        src={btcLogo}
-                        style={{
-                          height: "20px",
-                          width: "20px",
-                        }}
-                        alt="btc-logo"
-                      ></img>
-                      <span
-                        style={{
-                          color: "#5D647B",
-                          fontWeight: "600",
-                          fontSize: "14px",
-                          marginLeft: "2px",
-                          marginTop: "13px",
-                          textAlign: "left",
-                        }}
-                      >
-                        {" "}
-                        {inscriptionPrice}
-                      </span>
+                    <img
+                      alt={`inscription: ${inscription.inscriptionNumber}`}
+                      src={`${contentPrefix}/${inscription.inscriptionId}`}
+                      style={{
+                        height: "202.8px",
+                        width: "202.8px",
 
-                      <span
-                        style={{
-                          color: "#5D647B",
-                          fontWeight: "bold",
-                          fontSize: "10px",
-                          marginLeft: "2px",
-                        }}
-                      >
-                        sats
-                      </span>
-                    </div>
-                  }
-                />
-              </Space>
-              <Button style={{ width: "100%" }} onClick={buyNFT}>
-                Buy
-              </Button>
-            </Card>
-          </Col>
-          <Col span={8}>
-            <Card
-              hoverable
-              style={{ width: 240 }}
-              cover={
-                <div
-                  style={{
-                    border: "1px solid grey",
-                    borderRadius: "8px",
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <img
-                    alt={`inscription: ${inscriptionNumber}`}
-                    src={`${contentPrefix}/${inscriptionID}`}
-                    style={{}}
-                    loading="lazy"
-                    decoding="async"
+                        border: "1px solid grey",
+                        borderRadius: "8px",
+                        boxSizing: "border-box",
+                      }}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                }
+              >
+                <Space>
+                  <Meta
+                    title={
+                      // <div
+                      //   className="titleLeftAlign"
+                      //   style={{ marginTop: "0px", paddingTop: "0px" }}
+                      // >
+                      //   {inscriptionName} #{inscription.inscriptionNumber}
+                      // </div>
+                      ""
+                    }
+                    description={
+                      <div style={{ marginTop: "30px" }}>
+                        <img
+                          id="logo"
+                          src={btcLogo}
+                          style={{
+                            height: "20px",
+                            width: "20px",
+                          }}
+                          alt="btc-logo"
+                        ></img>
+                        <span
+                          style={{
+                            color: "#5D647B",
+                            fontWeight: "600",
+                            fontSize: "14px",
+                            marginLeft: "2px",
+                            marginTop: "13px",
+                            textAlign: "left",
+                          }}
+                        >
+                          {" "}
+                          {inscriptionPrice}
+                        </span>
+                        <span
+                          style={{
+                            color: "#5D647B",
+                            fontWeight: "bold",
+                            fontSize: "10px",
+                            marginLeft: "2px",
+                          }}
+                        >
+                          sats
+                        </span>
+                      </div>
+                    }
                   />
-                </div>
-              }
-            >
-              <Space>
-                <Meta
-                  title={
-                    <div className="titleLeftAlign">
-                      {inscriptionName} {inscriptionNumber}
-                    </div>
-                  }
-                  description={
-                    <div style={{ marginTop: "30px" }}>
-                      <img
-                        id="logo"
-                        src={btcLogo}
-                        style={{
-                          height: "20px",
-                          width: "20px",
-                        }}
-                        alt="btc-logo"
-                      ></img>
-                      <span
-                        style={{
-                          color: "#5D647B",
-                          fontWeight: "600",
-                          fontSize: "14px",
-                          marginLeft: "2px",
-                          marginTop: "13px",
-                          textAlign: "left",
-                        }}
-                      >
-                        {" "}
-                        {inscriptionPrice}
-                      </span>
-
-                      <span
-                        style={{
-                          color: "#5D647B",
-                          fontWeight: "bold",
-                          fontSize: "10px",
-                          marginLeft: "2px",
-                        }}
-                      >
-                        sats
-                      </span>
-                    </div>
-                  }
-                />
-              </Space>
-              <Button style={{ width: "100%" }} onClick={buyNFT}>
-                Buy
-              </Button>
-            </Card>
-          </Col>
+                </Space>
+                <Button style={{ width: "100%" }} onClick={buyNFT}>
+                  Buy
+                </Button>
+              </Card>
+            </Col>
+          ))}
         </Row>
       </div>
     </>
