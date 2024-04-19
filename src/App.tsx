@@ -105,6 +105,7 @@ function App() {
       case "market":
         return (
           <Market
+            address={accounts[0]}
             selectedToken={selectedToken}
             setSelectedToken={setSelectedToken}
           ></Market>

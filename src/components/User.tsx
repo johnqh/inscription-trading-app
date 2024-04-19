@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import userService from "../services/user";
 import Holdings from "./Holdings";
 import Orders from "./Orders";
+import Records from './Records';
 import btcLogo from "../images/btc-logo.png";
 import { Row, Col, Card, Flex, Space } from "antd";
 
@@ -15,6 +16,7 @@ interface UserProps {
 function User({ address, setMenuItem, setSelectedToken }: UserProps) {
   const [holdings, setHoldings] = useState([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [records, setRecords] = useState([]);
   const [balance, setBalance] = useState({
     confirmed: 0,
     unconfirmed: 0,
@@ -73,6 +75,11 @@ function User({ address, setMenuItem, setSelectedToken }: UserProps) {
     // Set the orders
     userService.getOrders(address).then((data) => {
       setOrders(data);
+    });
+
+    // Set the historical records
+    userService.getRecords(address).then(data => {
+      setRecords(data);
     });
 
     // Clean Up Interval
@@ -165,6 +172,11 @@ function User({ address, setMenuItem, setSelectedToken }: UserProps) {
               orders={orders.filter((order) => order.side === 0)}
               title="Sell"
             />
+          </div>
+        </Col>
+        <Col className="gutter-row" span={6}>
+          <div style={style}>
+            <Records records={records} />
           </div>
         </Col>
       </Row>

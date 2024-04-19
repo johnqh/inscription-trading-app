@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios"; // HTTP requests
+import userService from "../services/user";
+
 import {
   Button,
   List,
@@ -17,39 +19,64 @@ import {
 let apiPrefix = "http://localhost:3000";
 
 interface MarketProps {
+  address: string;
   selectedToken: string;
   setSelectedToken: (token: string) => void;
 }
 
-function Market({ selectedToken, setSelectedToken }: MarketProps) {
+function Market({ address, selectedToken, setSelectedToken }: MarketProps) {
   const [tokens, setTokens] = useState<string[]>([]);
   const [orderType, setOrderType] = useState("buy");
-  // const [selectedToken, setSelectedToken] = useState("");
+  const [selectedToken, setSelectedToken] = useState("");
+  const [holdings, setHoldings] = useState<any[]>([]);
+  const [dispText, setDispText] = useState("");
+
+  // Outside of the function to help cache
+  let responseData: any = null; // Define a variable to store the response data
+  let sellList: string[] = []; // Variable to store list of sellable tokens
 
   async function getTokens() {
-    let responseData: any; // Define a variable to store the response data
+    // only sell tokens that a user has
+    if (orderType === "buy") {
+      try {
+        if (!responseData) { // Try to cache data fetched
+          // Getting List of BRC-20 Tokens from Database (UniSat API)
+          const response = await axios.get(apiPrefix + "/deploy");
+          responseData = response.data;
+        }
+      } catch (error: any) {
+          console.error("Error:", error.message);
+          return null;
+      }
+      console.log("-----RESPONSE DATA-----");
+      console.log(responseData);
+      setTokens(responseData);
+      setDispText("Top BRC-20 Tokens");
+      console.log("LENGTH: " + tokens.length);
+    } else {
+      if (holdings.length === 0) {
+        userService.getHoldings(address).then((data) => {
+            setHoldings(data);
+        });
+      }
 
-    try {
-      // Getting List of BRC-20 Tokens from Database (UniSat API)
-      const response = await axios.get(apiPrefix + "/deploy");
-      responseData = response.data;
-    } catch (error: any) {
-      console.error("Error:", error.message);
-      return null;
+      holdings.forEach((holding) => {
+        if (holding.amt > 0) {
+          sellList.push(holding.tick)
+        }
+      });
+
+      setTokens(sellList);
+      setDispText("Your Tokens");
     }
-
-    console.log("-----RESPONSE DATA-----");
-    console.log(responseData);
-    setTokens(responseData);
-    console.log("LENGTH: " + tokens.length);
   }
 
   let unisat = (window as any).unisat;
 
-  // Makes Sure Updates Only Happen Once
+  // Update if the ordertype changes
   useEffect(() => {
     getTokens();
-  }, []);
+  }, [orderType, address]);
 
   // Field Type's for Order Form
   type FieldType = {
@@ -179,7 +206,7 @@ function Market({ selectedToken, setSelectedToken }: MarketProps) {
           {/* ------------------------- List of Tokens ------------------------- */}
           <Col span={8}>
             <List
-              header={<div>Top BRC-20 Tokens</div>}
+              header={<div>{dispText}</div>}
               bordered
               dataSource={tokens}
               renderItem={(token) => (
