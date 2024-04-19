@@ -29,6 +29,7 @@ function Market({ address }: { address: string }) {
   const [selectedToken, setSelectedToken] = useState("");
   const [holdings, setHoldings] = useState<any[]>([]);
   const [dispText, setDispText] = useState("");
+  const [fetchedHoldings, setFetchedHoldings] = useState(false);
 
   // Outside of the function to help cache
   let responseData: any = null; // Define a variable to store the response data
@@ -58,8 +59,9 @@ function Market({ address }: { address: string }) {
       setDispText("Top BRC-20 Tokens");
       console.log("LENGTH: " + tokens.length);
     } else {
-      if (holdings.length === 0) {
+      if (!fetchedHoldings) {
         userService.getHoldings(address).then((data) => {
+            setFetchedHoldings(true);
             setHoldings(data);
         });
       }
@@ -80,7 +82,7 @@ function Market({ address }: { address: string }) {
   // Update if the ordertype changes
   useEffect(() => {
     getTokens();
-  }, [orderType, address]);
+  }, [orderType, address, holdings]);
 
   type FieldType = {
     size?: number;
