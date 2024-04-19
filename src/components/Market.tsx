@@ -6,44 +6,49 @@ import {
   Row,
   Col,
   Form,
-  Input,
   Radio,
   type FormProps,
   message,
   Popconfirm,
   Space,
   DatePicker,
+  InputNumber,
+  InputNumberProps,
+  Select,
 } from "antd";
 
-// Imports for Expiration Part of the Form
+// Imports for Expiration Part of the Order Form
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 
 dayjs.extend(customParseFormat);
 
-const dateFormat = "YYYY-MM-DD";
+const dateFormat = "YYYY-MM-DD H:mm:ss";
+
+const { Option } = Select;
+
+const exchangeWallet = process.env.EXCHANGE_WALLET || "";
 
 let apiPrefix = "http://localhost:3000";
-
-const apiKey = process.env.REACT_APP_API_KEY || "";
-const apiUrl =
-  "https://open-api-testnet.unisat.io/v1/indexer/brc20/list?start=0&limit=75";
 
 function Market() {
   const [tokens, setTokens] = useState<any[]>([]);
   const [orderType, setOrderType] = useState("buy");
   const [selectedToken, setSelectedToken] = useState("");
+  const [buySpotPrice, setBuySpotPrice] = useState(0);
+  const [sellSpotPrice, setSellSpotPrice] = useState(0);
+  const [confirmBuyOrder, setConfirmBuyOrder] = useState(false);
+  const [confirmSellOrder, setConfirmSellOrder] = useState(false);
+  const [confirmBidOrder, setConfirmBidOrder] = useState(false);
+  const [confirmAskOrder, setConfirmAskOrder] = useState(false);
 
+  /* ----------------------------------- Retrieving Info from Database ----------------------------------- */
   async function getTokens() {
     let responseData: any; // Define a variable to store the response data
 
     try {
-      const response = await axios.get(apiUrl, {
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-      });
+      // Getting List of BRC-20 Tokens from Database (UniSat API)
+      const response = await axios.get(apiPrefix + "/deploy");
       responseData = response.data;
     } catch (error: any) {
       console.error("Error:", error.message);
@@ -52,8 +57,46 @@ function Market() {
 
     console.log("-----RESPONSE DATA-----");
     console.log(responseData);
-    setTokens(responseData.data.detail);
+    setTokens(responseData);
     console.log("LENGTH: " + tokens.length);
+  }
+
+  // Get The Spot Price for both Buyer & Seller
+  async function getSpotPrice() {
+    try {
+      // Retrieing Orders from Order Book (Database)
+      const response = await axios.get(apiPrefix + "/orders");
+      const orders = response.data;
+
+      // Spot Price
+      let sellerSpotPrice = Number.MAX_SAFE_INTEGER;
+      let buyerSpotPrice = Number.MIN_SAFE_INTEGER;
+
+      // Loop through Order Book
+      for (let order of orders) {
+        if (!order.fulfilled) {
+          // Spot Price for Seller is Greatest Price Buyer is Willing to Buy
+          if (order.side === 0) {
+            if (buyerSpotPrice < order.price) {
+              buyerSpotPrice = order.price;
+            }
+          }
+
+          // Spot Price for Buyer is Lowest Price Seller is Willing to Sell
+          if (order.side === 1) {
+            if (sellerSpotPrice > order.price) {
+              sellerSpotPrice = order.price;
+            }
+          }
+        }
+      }
+
+      setSellSpotPrice(sellerSpotPrice);
+      setBuySpotPrice(buyerSpotPrice);
+    } catch (error: any) {
+      console.error("Error:", error.message);
+      return null;
+    }
   }
 
   let unisat = (window as any).unisat;
@@ -61,41 +104,54 @@ function Market() {
   // Makes Sure Updates Only Happen Once
   useEffect(() => {
     getTokens();
+    getSpotPrice();
   }, []);
 
+  /* ----------------------------------- Order Form ----------------------------------- */
+
+  // Field Type's for Order Form
   type FieldType = {
     size?: number;
     price?: number;
     expiration?: number;
   };
 
+  // When a User Clicks Buy or Sell on Order Form
   const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
     try {
       let txid = "";
+
       if (orderType === "buy" && values.size && values.price) {
+        // Buyer sends Payment (BTC) to Exchange for BRC-20 Tokens
         txid = await unisat.sendBitcoin(
-          "tb1qeuzkvusgyxekclxwzjl49n9g30ankw60ly2l5m",
+          exchangeWallet,
           values.size * values.price,
           { feeRate: 10 }
         );
       } else if (orderType === "sell" && values.size && values.price) {
+        // Testing Purposes
         console.log(selectedToken);
         console.log(values.size);
-        // Transfer Token
+
+        // Seller Inscribes Transfer (Pays UniSat for this Service): Need to Inscribe First before Transferring Tokens, Otherwise it Sends the Inscription not Token
         const inscription = await unisat.inscribeTransfer(
           selectedToken,
           String(values.size)
         );
+
+        // Seller Sends BRC-20 Tokens to the Exchange
         txid = await unisat.sendInscription(
-          "tb1qeuzkvusgyxekclxwzjl49n9g30ankw60ly2l5m",
+          exchangeWallet,
           inscription.inscriptionId,
           { feeRate: 10 }
         );
       }
 
+      // User's Address
       const addresses = await unisat.getAccounts();
       const address = addresses ? addresses[0] : null;
 
+      // Order Information for Order Book (Database)
       let orderInfo = {
         address: address,
         tick: selectedToken,
@@ -108,17 +164,38 @@ function Market() {
         fulfilled: 0,
       };
 
+      // Testing Purposes
       console.log(orderInfo);
-
       console.log("Success:", values);
 
+      // Create Order in the Database
       await axios.post(apiPrefix + "/orders", orderInfo);
     } catch (e: any) {
       console.log(e);
       alert("Wallet not connected");
+    } finally {
+      // Reset the Confirm Order States after Finishing an Order
+      setConfirmBuyOrder(false);
+      setConfirmSellOrder(false);
+      setConfirmBidOrder(false);
+      setConfirmAskOrder(false);
     }
   };
 
+  // Size: Order Form
+  const onChange: InputNumberProps["onChange"] = (value) => {
+    console.log("changed", value);
+  };
+
+  // Price: Order Form
+  const selectAfter = (
+    <Select defaultValue="sats" style={{ width: 80 }}>
+      <Option value="sats">sats</Option>
+      <Option value="btc">BTC</Option>
+    </Select>
+  );
+
+  /* ----------------------------------- Order Form: Mouse Events ----------------------------------- */
   const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (
     errorInfo
   ) => {
@@ -167,6 +244,7 @@ function Market() {
 
   return (
     <>
+      {/* ------------------------- Title Header ------------------------- */}
       <div
         style={{
           textAlign: "left",
@@ -241,6 +319,7 @@ function Market() {
               action={apiPrefix + "/orders"}
               method="POST"
             >
+              {/* ---------- Buy/Sell Radio Buttons ---------- */}
               <Form.Item label="Order" name="order">
                 <Radio.Group
                   onChange={(e) => setOrderType(e.target.value)}
@@ -250,6 +329,8 @@ function Market() {
                   <Radio.Button value="sell">Sell</Radio.Button>
                 </Radio.Group>
               </Form.Item>
+
+              {/* ---------- Size ---------- */}
               <Form.Item<FieldType>
                 label="Size"
                 name="size"
@@ -260,9 +341,10 @@ function Market() {
                   },
                 ]}
               >
-                <Input />
+                <InputNumber min={1} onChange={onChange} />
               </Form.Item>
 
+              {/* ---------- Price ---------- */}
               <Form.Item<FieldType>
                 label="Price"
                 name="price"
@@ -270,9 +352,10 @@ function Market() {
                   { required: true, message: "Please enter a limit price." },
                 ]}
               >
-                <Input />
+                <InputNumber min={1} addonAfter={selectAfter} />
               </Form.Item>
 
+              {/* ---------- Expiration ---------- */}
               <Form.Item<FieldType>
                 label="Expiration"
                 name="expiration"
@@ -289,13 +372,14 @@ function Market() {
                 />
               </Form.Item>
 
+              {/* ---------- Bid or Ask Buttons ---------- */}
               <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
                 {orderType === "buy" ? (
                   <Popconfirm
                     title="Place bid"
                     description="Are you sure you want to place a bid?"
-                    onConfirm={confirmBid}
-                    onCancel={cancelBid}
+                    // onConfirm={confirmBid}
+                    // onCancel={cancelBid}
                     okText="Yes"
                     cancelText="No"
                   >
@@ -311,8 +395,8 @@ function Market() {
                   <Popconfirm
                     title="Place ask"
                     description="Are you sure you want to place an ask?"
-                    onConfirm={confirmAsk}
-                    onCancel={cancelAsk}
+                    // onConfirm={confirmAsk}
+                    // onCancel={cancelAsk}
                     okText="Yes"
                     cancelText="No"
                   >
@@ -325,12 +409,24 @@ function Market() {
                     </Button>
                   </Popconfirm>
                 )}
+
+                {/* ---------- Buy or Sell Buttons ---------- */}
                 {orderType === "buy" ? (
                   <Popconfirm
                     title="Buy order"
-                    description="Are you sure you want to buy at market price?"
-                    onConfirm={confirmBuy}
-                    onCancel={cancelBuy}
+                    description={
+                      <span>
+                        Are you sure you want to{" "}
+                        <strong>
+                          <span style={{ color: "#296e01" }}>buy</span>{" "}
+                          {selectedToken}
+                        </strong>{" "}
+                        at the <u>market price</u> of{" "}
+                        <strong>{sellSpotPrice} sats</strong>?
+                      </span>
+                    }
+                    // onConfirm={confirmBuy}
+                    // onCancel={cancelBuy}
                     okText="Yes"
                     cancelText="No"
                   >
@@ -338,7 +434,6 @@ function Market() {
                       type="primary"
                       htmlType="submit"
                       style={{ backgroundColor: "#5D647B" }}
-                      // onClick={sendBTC}
                     >
                       Buy
                     </Button>
@@ -346,9 +441,19 @@ function Market() {
                 ) : (
                   <Popconfirm
                     title="Sell order"
-                    description="Are you sure you want to sell at market price?"
-                    onConfirm={confirmSell}
-                    onCancel={cancelSell}
+                    description={
+                      <span>
+                        Are you sure you want to{" "}
+                        <strong>
+                          <span style={{ color: "#d92121" }}>sell</span>{" "}
+                          {selectedToken}
+                        </strong>{" "}
+                        at the <u>market price</u> of{" "}
+                        <strong>{buySpotPrice} sats</strong>?
+                      </span>
+                    }
+                    // onConfirm={confirmSell}
+                    // onCancel={cancelSell}
                     okText="Yes"
                     cancelText="No"
                   >
@@ -356,7 +461,6 @@ function Market() {
                       type="primary"
                       htmlType="submit"
                       style={{ backgroundColor: "#5D647B" }}
-                      // onClick={sendBRC}
                     >
                       Sell
                     </Button>
@@ -378,9 +482,14 @@ export default Market;
 Grid (Row, Col) - https://ant.design/components/grid
 List - https://ant.design/components/list
 Form - https://ant.design/components/form
+InputNumber - https://ant.design/components/input-number
 Button - https://ant.design/components/button
 Ponconfirm - https://ant.design/components/popconfirm
 DatePicker - https://ant.design/components/date-picker
 UniSat - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet#sendbitcoin
 Overflow Scroll - https://developer.mozilla.org/en-US/docs/Web/CSS/overflow
+Spot Price - https://www.investopedia.com/terms/s/spotprice.asp#:~:text=The%20spot%20price%20is%20the,or%20sold%20for%20immediate%20delivery.
+Number.MIN_SAFE_INTEGER - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MIN_SAFE_INTEGER
+Number.MAX_SAFE_INTEGER - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
+Day.js - https://day.js.org/docs/en/plugin/custom-parse-format
 */

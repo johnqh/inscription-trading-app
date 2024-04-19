@@ -6,16 +6,19 @@ import btcLogo from "../images/btc-logo.png";
 
 const contentPrefix = "https://static-testnet.unisat.io/content";
 let inscriptionName = "ZORO";
-let inscriptionPrice = "3023";
+let inscriptionPrice = 3023;
 
 let apiPrefix = "http://localhost:3000";
 let address: string;
+
+const exchangeWallet = process.env.EXCHANGE_WALLET || "";
 
 function Nft() {
   const [inscriptions, setInscriptions] = useState<any[]>([]);
 
   let unisat = (window as any).unisat;
 
+  /* ----------------------------------- Retrieve Info from Database ----------------------------------- */
   async function getNFT() {
     try {
       // User's Address
@@ -37,22 +40,17 @@ function Nft() {
     }
   }
 
-  // Seller's Order Details
-  async function sellNFT()
-  {
+  /* ----------------------------------- Order: Buy or Sell NFTs ----------------------------------- */
 
-  }
+  // Seller's Order Details
+  async function sellNFT() {}
 
   // Buyer's Order Details
   async function buyNFT() {
     try {
       let txid = "";
       let price = 2;
-      txid = await unisat.sendBitcoin(
-        "tb1qeuzkvusgyxekclxwzjl49n9g30ankw60ly2l5m",
-        price,
-        { feeRate: 10 }
-      );
+      txid = await unisat.sendBitcoin(exchangeWallet, price, { feeRate: 10 });
 
       const addresses = await unisat.getAccounts();
       const address = addresses ? addresses[0] : null;
@@ -82,6 +80,7 @@ function Nft() {
 
   return (
     <>
+      {/* ------------------------- Title Header ------------------------- */}
       <div
         style={{
           textAlign: "left",
@@ -114,6 +113,7 @@ function Nft() {
         }}
       >
         <Row gutter={60}>
+          {/* ------------------------- NFT Cards ------------------------- */}
           {inscriptions.map((inscription) => (
             <Col span={4.8} key={inscription.inscriptionId}>
               <Card
@@ -144,6 +144,8 @@ function Nft() {
                         marginTop: "10px",
                       }}
                     >
+
+                      {/* ---------- Inscription Name ---------- */}
                       <span
                         style={{
                           textAlign: "left",
@@ -153,6 +155,8 @@ function Nft() {
                       >
                         {inscriptionName}
                       </span>
+
+                      {/* ---------- Inscription Number ---------- */}
                       <span
                         style={{
                           color: "#5D647B",
@@ -167,6 +171,7 @@ function Nft() {
                         {inscription.inscriptionNumber}
                       </span>
                     </div>
+                    {/* ---------- NFT Content ---------- */}
                     <img
                       alt={`inscription: ${inscription.inscriptionNumber}`}
                       src={`${contentPrefix}/${inscription.inscriptionId}`}
@@ -184,6 +189,7 @@ function Nft() {
                   </div>
                 }
               >
+                {/* ------------------------- NFT Info ------------------------- */}
                 <Space>
                   <Meta
                     title={
@@ -197,6 +203,7 @@ function Nft() {
                     }
                     description={
                       <div style={{ marginTop: "30px" }}>
+                        {/* ---------- BTC Image ---------- */}
                         <img
                           id="logo"
                           src={btcLogo}
@@ -206,6 +213,8 @@ function Nft() {
                           }}
                           alt="btc-logo"
                         ></img>
+
+                        {/* ---------- Price ---------- */}
                         <span
                           style={{
                             color: "#5D647B",
@@ -219,6 +228,8 @@ function Nft() {
                           {" "}
                           {inscriptionPrice}
                         </span>
+
+                        {/* ---------- Currency Unit: Sats ---------- */}
                         <span
                           style={{
                             color: "#5D647B",
@@ -233,6 +244,7 @@ function Nft() {
                     }
                   />
                 </Space>
+                {/* ---------- Buy Button ---------- */}
                 <Button style={{ width: "100%" }} onClick={buyNFT}>
                   Buy
                 </Button>
