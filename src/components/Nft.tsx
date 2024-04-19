@@ -144,7 +144,6 @@ function Nft() {
                         marginTop: "10px",
                       }}
                     >
-
                       {/* ---------- Inscription Name ---------- */}
                       <span
                         style={{

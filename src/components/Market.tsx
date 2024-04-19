@@ -23,11 +23,13 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 
 dayjs.extend(customParseFormat);
 
-const dateFormat = "YYYY-MM-DD H:mm:ss";
+const dateFormat = "YYYY-MM-DD HH:mm:ss";
 
 const { Option } = Select;
 
-const exchangeWallet = process.env.EXCHANGE_WALLET || "";
+const exchangeWallet = process.env.REACT_APP_EXCHANGE_WALLET || "";
+// console.log("EXCHANGE WALLET");
+// console.log(exchangeWallet);
 
 let apiPrefix = "http://localhost:3000";
 
@@ -37,10 +39,9 @@ function Market() {
   const [selectedToken, setSelectedToken] = useState("");
   const [buySpotPrice, setBuySpotPrice] = useState(0);
   const [sellSpotPrice, setSellSpotPrice] = useState(0);
-  const [confirmBuyOrder, setConfirmBuyOrder] = useState(false);
-  const [confirmSellOrder, setConfirmSellOrder] = useState(false);
-  const [confirmBidOrder, setConfirmBidOrder] = useState(false);
-  const [confirmAskOrder, setConfirmAskOrder] = useState(false);
+  const [orderPrice, setOrderPrice] = useState(0);
+
+  const [form] = Form.useForm();
 
   /* ----------------------------------- Retrieving Info from Database ----------------------------------- */
   async function getTokens() {
@@ -69,30 +70,49 @@ function Market() {
       const orders = response.data;
 
       // Spot Price
-      let sellerSpotPrice = Number.MAX_SAFE_INTEGER;
-      let buyerSpotPrice = Number.MIN_SAFE_INTEGER;
+      let sellerSpotPrice = Number.MIN_SAFE_INTEGER;
+      let buyerSpotPrice = Number.MAX_SAFE_INTEGER;
 
+      console.log(selectedToken);
       // Loop through Order Book
       for (let order of orders) {
-        if (!order.fulfilled) {
-          // Spot Price for Seller is Greatest Price Buyer is Willing to Buy
+        if (!order.fulfilled && order.tick === selectedToken) {
+          // Spot Price for Buyer is Lowest Price Seller is Willing to Sell
           if (order.side === 0) {
-            if (buyerSpotPrice < order.price) {
+            console.log(order);
+
+            if (order.price < buyerSpotPrice) {
               buyerSpotPrice = order.price;
             }
+            console.log(buyerSpotPrice);
           }
 
-          // Spot Price for Buyer is Lowest Price Seller is Willing to Sell
+          // Spot Price for Seller is Greatest Price Buyer is Willing to Buy
           if (order.side === 1) {
-            if (sellerSpotPrice > order.price) {
+            if (order.price > sellerSpotPrice) {
               sellerSpotPrice = order.price;
             }
           }
         }
       }
 
+      console.log("NUmber MIN: " + Number.MIN_SAFE_INTEGER);
+
+      if (buyerSpotPrice === Number.MAX_SAFE_INTEGER) {
+        buyerSpotPrice = 0;
+      }
+
+      if (sellerSpotPrice === Number.MIN_SAFE_INTEGER) {
+        sellerSpotPrice = 0;
+      }
+
       setSellSpotPrice(sellerSpotPrice);
       setBuySpotPrice(buyerSpotPrice);
+
+      console.log("------SELL SPOT PRICE------");
+      console.log(sellSpotPrice);
+      console.log("------BUY SPOT PRICE------");
+      console.log(buySpotPrice);
     } catch (error: any) {
       console.error("Error:", error.message);
       return null;
@@ -104,8 +124,11 @@ function Market() {
   // Makes Sure Updates Only Happen Once
   useEffect(() => {
     getTokens();
-    getSpotPrice();
   }, []);
+
+  useEffect(() => {
+    getSpotPrice();
+  }, [selectedToken]);
 
   /* ----------------------------------- Order Form ----------------------------------- */
 
@@ -121,14 +144,30 @@ function Market() {
     try {
       let txid = "";
 
-      if (orderType === "buy" && values.size && values.price) {
+      console.log("-----VALUES-------");
+      console.log(values);
+
+      console.log("EXCHANGE WALLET");
+      console.log(exchangeWallet);
+
+      if (orderType === "buy" && values.size) {
+        // Info Field is Blank
+        if (!orderPrice) {
+          setOrderPrice(buySpotPrice);
+        }
+
         // Buyer sends Payment (BTC) to Exchange for BRC-20 Tokens
         txid = await unisat.sendBitcoin(
           exchangeWallet,
-          values.size * values.price,
-          { feeRate: 10 }
+          values.size * orderPrice,
+          { feeRate: 30 }
         );
-      } else if (orderType === "sell" && values.size && values.price) {
+        confirmBuy();
+      } else if (orderType === "sell" && values.size) {
+        // Info Field is Blank
+        if (!orderPrice) {
+          setOrderPrice(sellSpotPrice);
+        }
         // Testing Purposes
         console.log(selectedToken);
         console.log(values.size);
@@ -145,6 +184,7 @@ function Market() {
           inscription.inscriptionId,
           { feeRate: 10 }
         );
+        confirmSell();
       }
 
       // User's Address
@@ -157,7 +197,7 @@ function Market() {
         tick: selectedToken,
         side: orderType === "buy" ? 1 : 0,
         amt: values.size,
-        price: values.price,
+        price: orderPrice,
         expiration: values.expiration || null,
         expired: 0,
         txid: txid,
@@ -172,13 +212,11 @@ function Market() {
       await axios.post(apiPrefix + "/orders", orderInfo);
     } catch (e: any) {
       console.log(e);
-      alert("Wallet not connected");
-    } finally {
-      // Reset the Confirm Order States after Finishing an Order
-      setConfirmBuyOrder(false);
-      setConfirmSellOrder(false);
-      setConfirmBidOrder(false);
-      setConfirmAskOrder(false);
+      if (e.code === 4001) {
+        alert("Rejected the transaction");
+      } else {
+        alert("Wallet not connected");
+      }
     }
   };
 
@@ -308,6 +346,7 @@ function Market() {
           {/* ------------------------- Order Form: Buy or Sell ------------------------- */}
           <Col span={8}>
             <Form
+              form={form}
               name="basic"
               labelCol={{ span: 8 }}
               wrapperCol={{ span: 16 }}
@@ -316,8 +355,8 @@ function Market() {
               onFinish={onFinish}
               onFinishFailed={onFinishFailed}
               autoComplete="off"
-              action={apiPrefix + "/orders"}
-              method="POST"
+              // action={apiPrefix + "/orders"}
+              // method="POST"
             >
               {/* ---------- Buy/Sell Radio Buttons ---------- */}
               <Form.Item label="Order" name="order">
@@ -349,10 +388,19 @@ function Market() {
                 label="Price"
                 name="price"
                 rules={[
-                  { required: true, message: "Please enter a limit price." },
+                  { required: false, message: "Please enter a limit price." },
                 ]}
               >
-                <InputNumber min={1} addonAfter={selectAfter} />
+                <InputNumber
+                  min={1}
+                  addonAfter={selectAfter}
+                  onChange={(price) => {
+                    setOrderPrice(
+                      price ||
+                        (orderType === "buy" ? buySpotPrice : sellSpotPrice)
+                    );
+                  }}
+                />
               </Form.Item>
 
               {/* ---------- Expiration ---------- */}
@@ -369,6 +417,7 @@ function Market() {
                 <DatePicker
                   minDate={dayjs("2024-04-01", dateFormat)}
                   maxDate={dayjs("2025-10-31", dateFormat)}
+                  format={dateFormat}
                 />
               </Form.Item>
 
@@ -421,18 +470,25 @@ function Market() {
                           <span style={{ color: "#296e01" }}>buy</span>{" "}
                           {selectedToken}
                         </strong>{" "}
-                        at the <u>market price</u> of{" "}
-                        <strong>{sellSpotPrice} sats</strong>?
+                        at the{" "}
+                        <u>
+                          {orderPrice === buySpotPrice
+                            ? "market price"
+                            : "price"}
+                        </u>{" "}
+                        of <strong>{orderPrice} sats</strong>?
                       </span>
                     }
-                    // onConfirm={confirmBuy}
-                    // onCancel={cancelBuy}
+                    onConfirm={() => {
+                      form.submit();
+                    }}
+                    onCancel={cancelBuy}
                     okText="Yes"
                     cancelText="No"
                   >
                     <Button
                       type="primary"
-                      htmlType="submit"
+                      // htmlType="submit"
                       style={{ backgroundColor: "#5D647B" }}
                     >
                       Buy
@@ -448,8 +504,13 @@ function Market() {
                           <span style={{ color: "#d92121" }}>sell</span>{" "}
                           {selectedToken}
                         </strong>{" "}
-                        at the <u>market price</u> of{" "}
-                        <strong>{buySpotPrice} sats</strong>?
+                        at the{" "}
+                        <u>
+                          {orderPrice === sellSpotPrice
+                            ? "market price"
+                            : "price"}
+                        </u>{" "}
+                        of <strong>{orderPrice} sats</strong>?
                       </span>
                     }
                     // onConfirm={confirmSell}
@@ -492,4 +553,5 @@ Spot Price - https://www.investopedia.com/terms/s/spotprice.asp#:~:text=The%20sp
 Number.MIN_SAFE_INTEGER - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MIN_SAFE_INTEGER
 Number.MAX_SAFE_INTEGER - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
 Day.js - https://day.js.org/docs/en/plugin/custom-parse-format
+form - https://stackoverflow.com/questions/74387690/how-to-submit-the-antd-form-onconfirmation-of-antd-popconfirm
 */
