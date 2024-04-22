@@ -28,8 +28,6 @@ const dateFormat = "YYYY-MM-DD HH:mm:ss";
 const { Option } = Select;
 
 const exchangeWallet = process.env.REACT_APP_EXCHANGE_WALLET || "";
-// console.log("EXCHANGE WALLET");
-// console.log(exchangeWallet);
 
 let apiPrefix = "http://localhost:3000";
 
@@ -126,6 +124,7 @@ function Market() {
     getTokens();
   }, []);
 
+  // When a Token is Selected Retrieve it's Spot Price
   useEffect(() => {
     getSpotPrice();
   }, [selectedToken]);
@@ -151,7 +150,7 @@ function Market() {
       console.log(exchangeWallet);
 
       if (orderType === "buy" && values.size) {
-        // Info Field is Blank
+        // Info Field for Price is Blank
         if (!orderPrice) {
           setOrderPrice(buySpotPrice);
         }
@@ -164,7 +163,7 @@ function Market() {
         );
         confirmBuy();
       } else if (orderType === "sell" && values.size) {
-        // Info Field is Blank
+        // Info Field for Price is Blank
         if (!orderPrice) {
           setOrderPrice(sellSpotPrice);
         }
@@ -280,6 +279,10 @@ function Market() {
     message.error("Aw-shucks! Coins weren't added to your wallet.");
   };
 
+  const onImageError = (e: any) => {
+    e.target.style.display = "none";
+  };
+
   return (
     <>
       {/* ------------------------- Title Header ------------------------- */}
@@ -307,14 +310,19 @@ function Market() {
       <Space direction="vertical" size="middle" style={{ display: "flex" }}>
         <Row
           style={{
-            maxHeight: "600px",
-            overflowY: "scroll",
             marginTop: 50,
             paddingLeft: 100,
           }}
         >
           {/* ------------------------- List of Tokens ------------------------- */}
-          <Col span={8}>
+          <Col
+            span={8}
+            style={{
+              height: "calc(100vh - 200px)", // Set the height to fill the remaining viewport space
+              overflowY: "scroll",
+              paddingBottom: 200,
+            }}
+          >
             <List
               header={<div>Top BRC-20 Tokens</div>}
               bordered
@@ -334,6 +342,22 @@ function Market() {
                 >
                   {" "}
                   <div>
+                    {typeof token === "boolean" ? (
+                      ""
+                    ) : (
+                      <img
+                        src={`https://next-cdn.unisat.io/_/img/tick/${token}.png`}
+                        alt=""
+                        onError={onImageError}
+                        style={{
+                          height: "20px",
+                          width: "20px",
+                          marginBottom: -5,
+                          marginRight: 3,
+                        }}
+                      />
+                    )}
+
                     <span>{token}</span>
                   </div>
                 </List.Item>
@@ -344,191 +368,195 @@ function Market() {
           {/* ------------------------- Order Book ------------------------- */}
           <Col span={8}></Col>
           {/* ------------------------- Order Form: Buy or Sell ------------------------- */}
-          <Col span={8}>
-            <Form
-              form={form}
-              name="basic"
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              style={{ maxWidth: 600, marginRight: 60 }}
-              initialValues={{ remember: true }}
-              onFinish={onFinish}
-              onFinishFailed={onFinishFailed}
-              autoComplete="off"
-              // action={apiPrefix + "/orders"}
-              // method="POST"
-            >
-              {/* ---------- Buy/Sell Radio Buttons ---------- */}
-              <Form.Item label="Order" name="order">
-                <Radio.Group
-                  onChange={(e) => setOrderType(e.target.value)}
-                  value={orderType}
+          <Col span={8} style={{}}>
+            <div style={{}}>
+              <Form
+                form={form}
+                name="basic"
+                labelCol={{ span: 8 }}
+                wrapperCol={{ span: 16 }}
+                style={{ maxWidth: 600, marginRight: 60 }}
+                initialValues={{ remember: true }}
+                onFinish={onFinish}
+                onFinishFailed={onFinishFailed}
+                autoComplete="off"
+                // action={apiPrefix + "/orders"}
+                // method="POST"
+              >
+                {/* ---------- Buy/Sell Radio Buttons ---------- */}
+                <Form.Item label="Order" name="order">
+                  <Radio.Group
+                    onChange={(e) => setOrderType(e.target.value)}
+                    value={orderType}
+                  >
+                    <Radio.Button value="buy">Buy</Radio.Button>
+                    <Radio.Button value="sell">Sell</Radio.Button>
+                  </Radio.Group>
+                </Form.Item>
+
+                {/* ---------- Size ---------- */}
+                <Form.Item<FieldType>
+                  label="Size"
+                  name="size"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input the amount of tokens.",
+                    },
+                  ]}
                 >
-                  <Radio.Button value="buy">Buy</Radio.Button>
-                  <Radio.Button value="sell">Sell</Radio.Button>
-                </Radio.Group>
-              </Form.Item>
+                  <InputNumber min={1} onChange={onChange} />
+                </Form.Item>
 
-              {/* ---------- Size ---------- */}
-              <Form.Item<FieldType>
-                label="Size"
-                name="size"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please input the amount of tokens.",
-                  },
-                ]}
-              >
-                <InputNumber min={1} onChange={onChange} />
-              </Form.Item>
-
-              {/* ---------- Price ---------- */}
-              <Form.Item<FieldType>
-                label="Price"
-                name="price"
-                rules={[
-                  { required: false, message: "Please enter a limit price." },
-                ]}
-              >
-                <InputNumber
-                  min={1}
-                  addonAfter={selectAfter}
-                  onChange={(price) => {
-                    setOrderPrice(
-                      price ||
-                        (orderType === "buy" ? buySpotPrice : sellSpotPrice)
-                    );
-                  }}
-                />
-              </Form.Item>
-
-              {/* ---------- Expiration ---------- */}
-              <Form.Item<FieldType>
-                label="Expiration"
-                name="expiration"
-                rules={[
-                  {
-                    required: false,
-                    message: "Please enter an expiration time.",
-                  },
-                ]}
-              >
-                <DatePicker
-                  minDate={dayjs("2024-04-01", dateFormat)}
-                  maxDate={dayjs("2025-10-31", dateFormat)}
-                  format={dateFormat}
-                />
-              </Form.Item>
-
-              {/* ---------- Bid or Ask Buttons ---------- */}
-              <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-                {orderType === "buy" ? (
-                  <Popconfirm
-                    title="Place bid"
-                    description="Are you sure you want to place a bid?"
-                    // onConfirm={confirmBid}
-                    // onCancel={cancelBid}
-                    okText="Yes"
-                    cancelText="No"
-                  >
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      style={{ backgroundColor: "#5D647B" }}
-                    >
-                      Bid
-                    </Button>
-                  </Popconfirm>
-                ) : (
-                  <Popconfirm
-                    title="Place ask"
-                    description="Are you sure you want to place an ask?"
-                    // onConfirm={confirmAsk}
-                    // onCancel={cancelAsk}
-                    okText="Yes"
-                    cancelText="No"
-                  >
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      style={{ backgroundColor: "#5D647B" }}
-                    >
-                      Ask
-                    </Button>
-                  </Popconfirm>
-                )}
-
-                {/* ---------- Buy or Sell Buttons ---------- */}
-                {orderType === "buy" ? (
-                  <Popconfirm
-                    title="Buy order"
-                    description={
-                      <span>
-                        Are you sure you want to{" "}
-                        <strong>
-                          <span style={{ color: "#296e01" }}>buy</span>{" "}
-                          {selectedToken}
-                        </strong>{" "}
-                        at the{" "}
-                        <u>
-                          {orderPrice === buySpotPrice
-                            ? "market price"
-                            : "price"}
-                        </u>{" "}
-                        of <strong>{orderPrice} sats</strong>?
-                      </span>
-                    }
-                    onConfirm={() => {
-                      form.submit();
+                {/* ---------- Price ---------- */}
+                <Form.Item<FieldType>
+                  label="Price"
+                  name="price"
+                  rules={[
+                    { required: false, message: "Please enter a limit price." },
+                  ]}
+                >
+                  <InputNumber
+                    min={1}
+                    addonAfter={selectAfter}
+                    onChange={(price) => {
+                      setOrderPrice(
+                        price ||
+                          (orderType === "buy" ? buySpotPrice : sellSpotPrice)
+                      );
                     }}
-                    onCancel={cancelBuy}
-                    okText="Yes"
-                    cancelText="No"
-                  >
-                    <Button
-                      type="primary"
-                      // htmlType="submit"
-                      style={{ backgroundColor: "#5D647B" }}
+                  />
+                </Form.Item>
+
+                {/* ---------- Expiration ---------- */}
+                <Form.Item<FieldType>
+                  label="Expiration"
+                  name="expiration"
+                  rules={[
+                    {
+                      required: false,
+                      message: "Please enter an expiration time.",
+                    },
+                  ]}
+                >
+                  <DatePicker
+                    minDate={dayjs("2024-04-01", dateFormat)}
+                    maxDate={dayjs("2025-10-31", dateFormat)}
+                    format={dateFormat}
+                  />
+                </Form.Item>
+
+                {/* ---------- Bid or Ask Buttons ---------- */}
+                <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+                  {orderType === "buy" ? (
+                    <Popconfirm
+                      title="Place bid"
+                      description="Are you sure you want to place a bid?"
+                      // onConfirm={confirmBid}
+                      // onCancel={cancelBid}
+                      okText="Yes"
+                      cancelText="No"
                     >
-                      Buy
-                    </Button>
-                  </Popconfirm>
-                ) : (
-                  <Popconfirm
-                    title="Sell order"
-                    description={
-                      <span>
-                        Are you sure you want to{" "}
-                        <strong>
-                          <span style={{ color: "#d92121" }}>sell</span>{" "}
-                          {selectedToken}
-                        </strong>{" "}
-                        at the{" "}
-                        <u>
-                          {orderPrice === sellSpotPrice
-                            ? "market price"
-                            : "price"}
-                        </u>{" "}
-                        of <strong>{orderPrice} sats</strong>?
-                      </span>
-                    }
-                    // onConfirm={confirmSell}
-                    // onCancel={cancelSell}
-                    okText="Yes"
-                    cancelText="No"
-                  >
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      style={{ backgroundColor: "#5D647B" }}
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        style={{ backgroundColor: "#5D647B" }}
+                      >
+                        Bid
+                      </Button>
+                    </Popconfirm>
+                  ) : (
+                    <Popconfirm
+                      title="Place ask"
+                      description="Are you sure you want to place an ask?"
+                      // onConfirm={confirmAsk}
+                      // onCancel={cancelAsk}
+                      okText="Yes"
+                      cancelText="No"
                     >
-                      Sell
-                    </Button>
-                  </Popconfirm>
-                )}
-              </Form.Item>
-            </Form>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        style={{ backgroundColor: "#5D647B" }}
+                      >
+                        Ask
+                      </Button>
+                    </Popconfirm>
+                  )}
+
+                  {/* ---------- Buy or Sell Buttons ---------- */}
+                  {orderType === "buy" ? (
+                    <Popconfirm
+                      title="Buy order"
+                      description={
+                        <span>
+                          Are you sure you want to{" "}
+                          <strong>
+                            <span style={{ color: "#296e01" }}>buy</span>{" "}
+                            {selectedToken}
+                          </strong>{" "}
+                          at the{" "}
+                          <u>
+                            {orderPrice === buySpotPrice
+                              ? "market price"
+                              : "price"}
+                          </u>{" "}
+                          of <strong>{orderPrice} sats</strong>?
+                        </span>
+                      }
+                      onConfirm={() => {
+                        form.submit();
+                      }}
+                      onCancel={cancelBuy}
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <Button
+                        type="primary"
+                        // htmlType="submit"
+                        style={{ backgroundColor: "#5D647B" }}
+                      >
+                        Buy
+                      </Button>
+                    </Popconfirm>
+                  ) : (
+                    <Popconfirm
+                      title="Sell order"
+                      description={
+                        <span>
+                          Are you sure you want to{" "}
+                          <strong>
+                            <span style={{ color: "#d92121" }}>sell</span>{" "}
+                            {selectedToken}
+                          </strong>{" "}
+                          at the{" "}
+                          <u>
+                            {orderPrice === sellSpotPrice
+                              ? "market price"
+                              : "price"}
+                          </u>{" "}
+                          of <strong>{orderPrice} sats</strong>?
+                        </span>
+                      }
+                      onConfirm={() => {
+                        form.submit();
+                      }}
+                      onCancel={cancelSell}
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        style={{ backgroundColor: "#5D647B" }}
+                      >
+                        Sell
+                      </Button>
+                    </Popconfirm>
+                  )}
+                </Form.Item>
+              </Form>
+            </div>
           </Col>
         </Row>
       </Space>
@@ -554,4 +582,5 @@ Number.MIN_SAFE_INTEGER - https://developer.mozilla.org/en-US/docs/Web/JavaScrip
 Number.MAX_SAFE_INTEGER - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
 Day.js - https://day.js.org/docs/en/plugin/custom-parse-format
 form - https://stackoverflow.com/questions/74387690/how-to-submit-the-antd-form-onconfirmation-of-antd-popconfirm
+Broken Images - https://www.codevertiser.com/check-and-resolve-broken-images-in-reactjs/
 */

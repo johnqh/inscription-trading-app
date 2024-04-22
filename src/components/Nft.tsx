@@ -15,11 +15,12 @@ const exchangeWallet = process.env.EXCHANGE_WALLET || "";
 
 function Nft() {
   const [inscriptions, setInscriptions] = useState<any[]>([]);
+  const [convertBtcToUsd, setConvertBtcToUsd] = useState(0);
 
   let unisat = (window as any).unisat;
 
   /* ----------------------------------- Retrieve Info from Database ----------------------------------- */
-  async function getNFT() {
+  async function getNFTs() {
     try {
       // User's Address
       let addressResponse = await unisat.getAccounts();
@@ -40,34 +41,44 @@ function Nft() {
     }
   }
 
-  /* ----------------------------------- Order: Buy or Sell NFTs ----------------------------------- */
+  const apiKey = process.env.REACT_APP_GECKO || "";
 
-  // Seller's Order Details
-  async function sellNFT() {}
+  async function getBtcToUsdRate() {
+    try {
+      const response = await axios.get(
+        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",
+        {
+          headers: {
+            accept: "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+        }
+      );
+      const btcToUsdRate = response.data.bitcoin.usd;
+      setConvertBtcToUsd(btcToUsdRate);
+      return btcToUsdRate;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }
+
+  /* ----------------------------------- Order: Buy NFTs ----------------------------------- */
 
   // Buyer's Order Details
   async function buyNFT() {
     try {
       let txid = "";
       let price = 2;
-      txid = await unisat.sendBitcoin(exchangeWallet, price, { feeRate: 10 });
+      txid = await unisat.sendBitcoin(exchangeWallet, price, { feeRate: 30 });
 
       const addresses = await unisat.getAccounts();
       const address = addresses ? addresses[0] : null;
 
-      let orderInfo = {
-        seller_address: address,
-        buyer_address: address || null,
-        // inscriptionNumber: inscriptions.inscriptionNumber,
-        // inscriptionID: inscriptions.inscriptionId,
-        price: inscriptionPrice,
-        expiration: null,
-        expired: 0,
-        txid: txid,
-        fulfilled: 0,
-      };
-
-      console.log(orderInfo);
+      // Update NFT Order - Seller Populated Order when Listing NFT, So Only Need to Add Buyer's Address
+      // await axios.put(`${apiPrefix}/nft_orders/${inscriptionId}`, {
+      //   fulfilled: 1,
+      // });
     } catch (e: any) {
       console.log(e);
     }
@@ -75,7 +86,8 @@ function Nft() {
 
   // Makes Sure Updates Only Happen Once
   useEffect(() => {
-    getNFT();
+    getNFTs();
+    getBtcToUsdRate();
   }, []);
 
   return (
@@ -110,9 +122,11 @@ function Nft() {
           paddingTop: 50,
           paddingLeft: 100,
           overflowY: "scroll",
+          height: "calc(100vh - 200px)", // Set the height to fill the remaining viewport space
+          paddingBottom: 100,
         }}
       >
-        <Row gutter={60}>
+        <Row gutter={60} style={{ overflowY: "scroll" }}>
           {/* ------------------------- NFT Cards ------------------------- */}
           {inscriptions.map((inscription) => (
             <Col span={4.8} key={inscription.inscriptionId}>
@@ -123,6 +137,7 @@ function Nft() {
                   height: "356px",
                   // backgroundColor: "#f5f5f5",
                   border: "1px solid #2b2a29",
+                  marginBottom: 60,
                 }}
                 cover={
                   <div
@@ -191,15 +206,7 @@ function Nft() {
                 {/* ------------------------- NFT Info ------------------------- */}
                 <Space>
                   <Meta
-                    title={
-                      // <div
-                      //   className="titleLeftAlign"
-                      //   style={{ marginTop: "0px", paddingTop: "0px" }}
-                      // >
-                      //   {inscriptionName} #{inscription.inscriptionNumber}
-                      // </div>
-                      ""
-                    }
+                    title={""}
                     description={
                       <div style={{ marginTop: "30px" }}>
                         {/* ---------- BTC Image ---------- */}
@@ -239,6 +246,17 @@ function Nft() {
                         >
                           sats
                         </span>
+
+                        {/* ---------- Bitcoin to USD Conversion Rate ---------- */}
+                        <span>
+                          $
+                          {convertBtcToUsd
+                            ? (
+                                convertBtcToUsd *
+                                (Number(inscriptionPrice) / 100000000)
+                              ).toFixed(2)
+                            : "Loading..."}
+                        </span>
                       </div>
                     }
                   />
@@ -266,4 +284,5 @@ UniSat Wallet API - https://docs.unisat.io/dev/unisat-developer-service/unisat-w
 UniSat API Endpoints - https://open-api-testnet.unisat.io/swagger.html
 Inscription Example - https://testnet.unisat.io/inscription/0451d8f8f3181834262df077420d1c8701791c81345f17a8410e07e7c649e92ei0
 Marketplace Example - https://www.gate.io/web3/inscription-market/bitcoin/brc-nft
+Coin Gecko API - https://docs.coingecko.com/v3.0.1/reference/introduction
 */

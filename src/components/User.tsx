@@ -86,11 +86,12 @@ function User({ address }: { address: string }) {
   };
 
   return (
-    <div>
+    <div style={{ maxHeight: "80vh", overflowY: "scroll", paddingBottom: 200 }}>
       <Row gutter={16}>
         <Col className="gutter-row" span={6}>
           <Space direction="vertical" size="middle" style={{ display: "flex" }}>
             <div style={style}>
+              {/* -------------------- Balance -------------------- */}
               <Card
                 title="Balance"
                 styles={{ header: headStyle }}
@@ -133,11 +134,14 @@ function User({ address }: { address: string }) {
           </Space>
         </Col>
 
+        {/* -------------------- Tokens -------------------- */}
         <Col className="gutter-row" span={6}>
           <div style={style}>
             <Holdings holdings={holdings} />
           </div>
         </Col>
+
+        {/* -------------------- Buys -------------------- */}
         <Col className="gutter-row" span={6}>
           <div style={style}>
             <Orders
@@ -147,6 +151,7 @@ function User({ address }: { address: string }) {
           </div>
         </Col>
 
+        {/* -------------------- Sells -------------------- */}
         <Col className="gutter-row" span={6}>
           <div style={style}>
             <Orders
