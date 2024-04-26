@@ -4,8 +4,44 @@ import Holdings from "./Holdings";
 import Orders from "./Orders";
 import btcLogo from "../images/btc-logo.png";
 import { Row, Col, Card, Flex, Space } from "antd";
+import NftHoldings from "./NftHoldings";
+import DoughnutChart from "./DoughnutChart";
+import BarChart from "./BarChart";
+import LineChart from "./LineChart";
 
-function User({ address }: { address: string }) {
+import {
+  Chart,
+  ArcElement,
+  LineElement,
+  PointElement,
+  LinearScale,
+  Title,
+  CategoryScale,
+  BarElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+Chart.register(ArcElement);
+Chart.register(
+  BarElement,
+  LineElement,
+  PointElement,
+  LinearScale,
+  Title,
+  CategoryScale,
+  Tooltip,
+  Legend
+);
+
+interface UserProps {
+  address: string;
+  // These Props Below are Needed for Holdings
+  setMenuItem: (item: string) => void; // Allows setting up where a button or a hyperlink can link.
+  setSelectedToken: (token: string) => void; // Want to link to the market of the selected token the user selects.
+  setOrderType: (token: string) => void;
+}
+
+function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProps) {
   const [holdings, setHoldings] = useState([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [balance, setBalance] = useState({
@@ -13,9 +49,10 @@ function User({ address }: { address: string }) {
     unconfirmed: 0,
     total: 0,
   });
-  const [isTotal, setIsTotal] = useState(true); // Keep Trackk which Balance to Show Sats or BTC
+  const [currencyUnit, setCurrencyUnit] = useState(true); // Keep Track of which Currency Unit to Show Sats or BTC
 
   let unisat = (window as any).unisat;
+
   const getAddress = async () => {
     if (!address && unisat) {
       let x = await unisat.getAccounts();
@@ -52,9 +89,9 @@ function User({ address }: { address: string }) {
 
     getAccountBalance();
 
-    // Change Between Balances (Sats or BTC) Every 5 Seconds
+    // Change Between Balances (Sats or BTC) Every 12 Seconds
     const intervalId = setInterval(() => {
-      setIsTotal((prevIsTotal) => !prevIsTotal);
+       setCurrencyUnit((prevCurrencyUnit) => !prevCurrencyUnit);
     }, 12000);
 
     // set the holdings
@@ -78,6 +115,16 @@ function User({ address }: { address: string }) {
   const style: React.CSSProperties = {
     background: "fff",
     padding: "8px 0",
+    height: "500px",
+  };
+
+  const contentStyle: React.CSSProperties = {
+    margin: 0,
+    height: "160px",
+    color: "#fff",
+    lineHeight: "160px",
+    textAlign: "center",
+    background: "#364d79",
   };
 
   const headStyle = {
@@ -87,6 +134,7 @@ function User({ address }: { address: string }) {
 
   return (
     <div style={{ maxHeight: "80vh", overflowY: "scroll", paddingBottom: 200 }}>
+      {/* ------------------------------ 1st Row ------------------------------ */}
       <Row gutter={16}>
         <Col className="gutter-row" span={6}>
           <Space direction="vertical" size="middle" style={{ display: "flex" }}>
@@ -111,7 +159,7 @@ function User({ address }: { address: string }) {
                     ></img>
                     <div>
                       <span>
-                        {isTotal
+                        {currencyUnit
                           ? balance.total
                           : (balance.total / 100000000).toFixed(8)}
                       </span>
@@ -124,7 +172,7 @@ function User({ address }: { address: string }) {
                           marginTop: "13px",
                         }}
                       >
-                        {isTotal ? "sats" : "BTC"}
+                        {currencyUnit ? "sats" : "BTC"}
                       </span>
                     </div>
                   </Space>
@@ -137,7 +185,12 @@ function User({ address }: { address: string }) {
         {/* -------------------- Tokens -------------------- */}
         <Col className="gutter-row" span={6}>
           <div style={style}>
-            <Holdings holdings={holdings} />
+            <Holdings
+              holdings={holdings}
+              setMenuItem={setMenuItem}
+              setSelectedToken={setSelectedToken}
+              setOrderType={setOrderType}
+            />
           </div>
         </Col>
 
@@ -161,6 +214,60 @@ function User({ address }: { address: string }) {
           </div>
         </Col>
       </Row>
+
+      {/* ------------------------------ 2nd Row ------------------------------ */}
+      <Row gutter={16}>
+        <Col className="gutter-row" span={6}>
+          <Space direction="vertical" size="middle" style={{ display: "flex" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                paddingLeft: "130px",
+              }}
+            >
+              {" "}
+              <h1
+                style={{
+                  textOrientation: "upright",
+                  writingMode: "vertical-rl",
+                  alignItems: "center",
+                  color: "#5D647B",
+                }}
+              >
+                CHARTS
+              </h1>
+            </div>
+          </Space>
+        </Col>
+
+        {/* -------------------- Doughnut Chart -------------------- */}
+        <Col className="gutter-row" span={6} style={{ alignItems: "baseline" }}>
+          <div style={{ margin: "20px auto", maxWidth: "600px" }}>
+            <DoughnutChart holdings={holdings} />
+          </div>
+        </Col>
+
+        {/* -------------------- Bar Chart -------------------- */}
+        <Col className="gutter-row" span={6}>
+          <div style={{ margin: "20px auto" }}>
+            <BarChart orders={orders.filter((order) => order.side === 1)} />
+          </div>
+        </Col>
+
+        {/* -------------------- Line Chart -------------------- */}
+        <Col className="gutter-row" span={6}>
+          <div style={{ margin: "20px auto", maxWidth: "600px" }}>
+            <LineChart orders={orders.filter((order) => order.side === 0)} />
+          </div>
+        </Col>
+      </Row>
+
+      {/* ------------------------------ 3rd Row ------------------------------ */}
+      {/* -------------------- NFTs -------------------- */}
+      <div>
+        <NftHoldings address={address}></NftHoldings>
+      </div>
     </div>
   );
 }
@@ -173,4 +280,6 @@ Grid - https://ant.design/components/grid
 Space - https://ant.design/components/space
 Flex - https://ant.design/components/flex
 Card - https://ant.design/components/card
+arc - https://stackoverflow.com/questions/70098392/react-chartjs-2-with-chartjs-3-error-arc-is-not-a-registered-element
+bar graph - https://wanuja18.medium.com/here-are-some-errors-which-i-faced-while-implementing-bar-chart-and-doughnut-chart-8d2cb639b632
 */

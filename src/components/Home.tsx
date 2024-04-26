@@ -5,7 +5,11 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 
-function Home() {
+interface HomeProps {
+  setMenuItem: (item: string) => void; // Allows setting up where a button or a hyperlink can link to a different page.
+}
+
+function Home({ setMenuItem }: HomeProps) {
   return (
     <>
       <Row style={{ paddingTop: 50 }}>
@@ -46,7 +50,13 @@ function Home() {
           <br />
           <br />
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Button>Trade Now</Button>
+            <Button
+              onClick={() => {
+                setMenuItem("market");
+              }}
+            >
+              Trade Now
+            </Button>
             <div
               style={{
                 color: "#5D647B",

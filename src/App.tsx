@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./App.css";
 import Wallet from "./components/Wallet";
 import Market from "./components/Market";
@@ -8,9 +8,14 @@ import logo from "./images/Zorro Cat Logo.png";
 import MarketIcon from "./components/MarketIcon";
 import Home from "./components/Home";
 
-import { UserOutlined, SettingOutlined, TrademarkOutlined } from "@ant-design/icons";
+import {
+  UserOutlined,
+  SettingOutlined,
+  TrademarkOutlined,
+} from "@ant-design/icons";
 
 import { Layout, Flex, Button, Menu, MenuProps } from "antd";
+import NftHoldings from "./components/NftHoldings";
 
 const { Header, Footer, Sider, Content } = Layout;
 
@@ -82,22 +87,44 @@ const settingsItems: MenuItem[] = [getItem(<SettingOutlined />, "settings")];
 
 function App() {
   let [accounts, setAccounts] = useState<string[]>([]);
-  const [selectedMenuItem, setSelectedMenuItem] = useState("Account");
+  const [selectedMenuItem, setSelectedMenuItem] = useState("home");
+  const [selectedToken, setSelectedToken] = useState(""); // Initially defined in the Market component, we now need to define it here to have tokens on the account page that can link to that specific token's market page.
+  const [orderType, setOrderType] = useState("buy");
+
+  const setMenuItem = (item: string) => {
+    setSelectedMenuItem(item);
+  };
 
   const componentsSwitch = (key: string) => {
     console.log(key);
     switch (key) {
+      case "home":
+        return <Home setMenuItem={setMenuItem}></Home>;
       case "account":
         return (
           <>
             <Wallet accounts={accounts}></Wallet>
-            <User address={accounts[0]}></User>
+            <User
+              address={accounts[0]}
+              setMenuItem={setMenuItem}
+              setSelectedToken={setSelectedToken}
+              setOrderType={setOrderType}
+            ></User>
           </>
         );
       case "market":
-        return <Market></Market>;
+        return (
+          <Market
+            address={accounts[0]}
+            selectedToken={selectedToken}
+            setSelectedToken={setSelectedToken}
+            orderType={orderType}
+            setOrderType={setOrderType}
+          ></Market>
+        );
       case "nft":
         return <Nft></Nft>;
+
       default:
         break;
     }
@@ -145,7 +172,11 @@ function App() {
       </Sider>
       <Layout>
         <Header style={headerStyle}>
-          <Flex style={{ height: "100%", paddingTop: 20 }} justify="flex-end" align="center">
+          <Flex
+            style={{ height: "100%", paddingTop: 20 }}
+            justify="flex-end"
+            align="center"
+          >
             <Button
               type="primary"
               style={{ backgroundColor: "#5D647B" }}
@@ -157,10 +188,6 @@ function App() {
           </Flex>
         </Header>
         <Content style={contentStyle}>
-          {selectedMenuItem !== "account" &&
-            selectedMenuItem !== "market" &&
-            selectedMenuItem !== "nft" &&
-            selectedMenuItem !== "settings" && <Home />}
           {componentsSwitch(selectedMenuItem)}
         </Content>
         <Footer style={footerStyle}></Footer>

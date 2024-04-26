@@ -3,6 +3,7 @@ import { Card, List, ConfigProvider, Space, Modal, Button } from "antd";
 import { FrownOutlined } from "@ant-design/icons";
 import axios from "axios"; // HTTP requests
 import btcLogo from "../images/btc-logo.png";
+import logo from "../images/Zorro Cat Logo.png";
 
 export type Holding = {
   tick: string;
@@ -18,14 +19,21 @@ const customizeRenderEmpty = () => (
   </div>
 );
 
-let unisat = (window as any).unisat;
+interface HoldingsProps {
+  holdings: Holding[];
+  setMenuItem: (item: string) => void; // Allows setting up where a button or a hyperlink can link.
+  setSelectedToken: (token: string) => void; // Want to link to the market of the selected token the user selects
+  setOrderType: (type: string) => void;
+}
 
-function Holdings({ holdings }: { holdings: Holding[] }) {
+function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: HoldingsProps) {
   const [totalTokens, setTotalTokens] = useState(0);
   const [tick, setTick] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [tokenClicked, setTokenClicked] = useState(false);
   const [inscriptionData, setInscriptionData] = useState<any>({});
+  // const [selectedToken, setSelectedToken] = useState("");
+  const [tokenChosen, setTokenChosen] = useState("");
 
   const apiKey = process.env.REACT_APP_API_KEY || "";
 
@@ -45,7 +53,7 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
     } catch (error: any) {
       console.error("Error:", error.message);
       setInscriptionData({ error: true });
-    } 
+    }
   }
 
   async function getSummary() {
@@ -54,6 +62,12 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
 
     for (let token of holdings) {
       console.log(token);
+
+      // If 0, Don't Include Token in User's Token List
+      if (token.amt === 0) {
+        continue;
+      }
+
       elements.push(
         <div>
           <span>
@@ -63,20 +77,31 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
               onClick={async (e) => {
                 e.preventDefault(); // To avoid href linking instead want setMenuItem to do so
                 setTokenClicked(true);
+                setSelectedToken(token.tick);
+                setTokenChosen(token.tick);
                 await inscriptionInfo(token.tick); // Call details function with token.tick
                 setModalOpen(true);
               }}
             >
-              <img
-                src={`https://next-cdn.unisat.io/_/img/tick/${token.tick}.png`}
-                alt={`${token.tick}`}
-                style={{
-                  height: "20px",
-                  width: "20px",
-                  marginBottom: -5,
-                  marginRight: 3,
-                }}
-              />
+              {typeof token === "boolean" ? (
+                ""
+              ) : (
+                <img
+                  src={
+                    token.tick === "ZORO"
+                      ? logo
+                      : `https://next-cdn.unisat.io/_/img/tick/${token.tick}.png`
+                  }
+                  alt=""
+                  onError={onImageError}
+                  style={{
+                    height: "20px",
+                    width: "20px",
+                    marginBottom: -5,
+                    marginRight: 3,
+                  }}
+                />
+              )}
               {token.tick}: {token.amt}
             </a>
           </span>
@@ -113,6 +138,10 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
       return number.toString();
     }
   }
+
+  const onImageError = (e: any) => {
+    e.target.style.display = "none";
+  };
 
   return (
     <div>
@@ -168,17 +197,22 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
           }}
         >
           <div style={{}}>
-            <img
-              src={`https://next-cdn.unisat.io/_/img/tick/${inscriptionData.ticker}.png`}
-              alt={`${inscriptionData.ticker}`}
-              style={{
-                height: "80px",
-                width: "80px",
-                marginBottom: -5,
-                marginRight: 3,
-                paddingLeft: 50,
-              }}
-            />
+            {typeof tokenChosen === "boolean" ? (
+              ""
+            ) : (
+              <img
+                src={inscriptionData.ticker === 'ZORO' ? logo : `https://next-cdn.unisat.io/_/img/tick/${inscriptionData.ticker}.png`}
+                alt={`${inscriptionData.ticker}`}
+                style={{
+                  height: "80px",
+                  width: "80px",
+                  marginBottom: -5,
+                  marginRight: 3,
+                  paddingLeft: 50,
+                }}
+                onError={onImageError}
+              />
+            )}
           </div>
 
           {/* ---------- Token Details ---------- */}
@@ -241,9 +275,32 @@ function Holdings({ holdings }: { holdings: Holding[] }) {
             </div>
 
             {/* ---------- Buy / Sell Buttons ---------- */}
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20}}>
-              <Button style={{ marginTop: 30 }}>Buy</Button>
-              <Button style={{ marginTop: 30 }}>Sell</Button>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 20,
+              }}
+            >
+              <Button
+                onClick={() => {
+                   setOrderType("buy");
+                  setMenuItem("market");
+              
+                }}
+                style={{ marginTop: 30 }}
+              >
+                Buy
+              </Button>
+              <Button
+                onClick={() => {
+                  setOrderType("sell");
+                  setMenuItem("market");
+                }}
+                style={{ marginTop: 30 }}
+              >
+                Sell
+              </Button>
             </div>
           </div>
         </div>

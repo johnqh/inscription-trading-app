@@ -31,10 +31,18 @@ const exchangeWallet = process.env.REACT_APP_EXCHANGE_WALLET || "";
 
 let apiPrefix = "http://localhost:3000";
 
-function Market() {
+interface MarketProps {
+  address: string;
+  selectedToken: string;
+  setSelectedToken: (token: string) => void;
+  orderType: string;
+  setOrderType: (type: string) => void;
+}
+
+function Market({ address, selectedToken, setSelectedToken, orderType, setOrderType}: MarketProps) {
   const [tokens, setTokens] = useState<any[]>([]);
-  const [orderType, setOrderType] = useState("buy");
-  const [selectedToken, setSelectedToken] = useState("");
+  // const [orderType, setOrderType] = useState(orderFormType || "buy");
+  // const [selectedToken, setSelectedToken] = useState("");
   const [buySpotPrice, setBuySpotPrice] = useState(0);
   const [sellSpotPrice, setSellSpotPrice] = useState(0);
   const [orderPrice, setOrderPrice] = useState(0);
@@ -143,6 +151,12 @@ function Market() {
     try {
       let txid = "";
 
+      // Make Sure the User Selects a Specific Token to Buy or Sell
+      if (selectedToken === "") {
+        alert("Oops! You didn't select a token.");
+        return;
+      }
+
       console.log("-----VALUES-------");
       console.log(values);
 
@@ -224,7 +238,7 @@ function Market() {
     console.log("changed", value);
   };
 
-  // Price: Order Form
+  // Currency Units (Price): Order Form
   const selectAfter = (
     <Select defaultValue="sats" style={{ width: 80 }}>
       <Option value="sats">sats</Option>
@@ -318,13 +332,14 @@ function Market() {
           <Col
             span={8}
             style={{
-              height: "calc(100vh - 200px)", // Set the height to fill the remaining viewport space
-              overflowY: "scroll",
+              // height: "calc(100vh - 200px)", // Set the height to fill the remaining viewport space
+
               paddingBottom: 200,
             }}
           >
             <List
               header={<div>Top BRC-20 Tokens</div>}
+              style={{ maxHeight: "480px", overflowY: "scroll" }}
               bordered
               dataSource={tokens}
               renderItem={(token) => (
@@ -380,8 +395,6 @@ function Market() {
                 onFinish={onFinish}
                 onFinishFailed={onFinishFailed}
                 autoComplete="off"
-                // action={apiPrefix + "/orders"}
-                // method="POST"
               >
                 {/* ---------- Buy/Sell Radio Buttons ---------- */}
                 <Form.Item label="Order" name="order">

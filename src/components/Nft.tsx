@@ -3,12 +3,14 @@ import axios from "axios";
 import { Button, Card, Col, Row, Space } from "antd";
 import Meta from "antd/es/card/Meta";
 import btcLogo from "../images/btc-logo.png";
+import "../css/nft.css";
+import { FrownOutlined } from "@ant-design/icons";
 
 const contentPrefix = "https://static-testnet.unisat.io/content";
-let inscriptionName = "ZORO";
-let inscriptionPrice = 3023;
+// let inscriptionName = "ZORO";
+// let inscriptionPrice = 50023;
 
-let apiPrefix = "http://localhost:3000";
+const apiPrefix = "http://localhost:3000";
 let address: string;
 
 const exchangeWallet = process.env.EXCHANGE_WALLET || "";
@@ -16,6 +18,7 @@ const exchangeWallet = process.env.EXCHANGE_WALLET || "";
 function Nft() {
   const [inscriptions, setInscriptions] = useState<any[]>([]);
   const [convertBtcToUsd, setConvertBtcToUsd] = useState(0);
+  const [totalNfts, setTotalNfts] = useState(0);
 
   let unisat = (window as any).unisat;
 
@@ -28,7 +31,8 @@ function Nft() {
 
       // Retreive User's Inscription from Database (UniSat API)
       const response = await axios.get(
-        apiPrefix + `/holdings/nft?address=${address}`
+        // apiPrefix + `/holdings/nft?address=${address}`
+        apiPrefix + `/nft_orders`
       );
 
       console.log("-----RESPONSE-----");
@@ -36,13 +40,20 @@ function Nft() {
 
       // User's Inscriptions (Not including BRC-20)
       setInscriptions(response.data);
+      setTotalNfts(response.data.data.length);
     } catch (e) {
       console.log(e);
     }
   }
 
+  function getMarketNftTotal() {
+    let nfts = inscriptions.length;
+    setTotalNfts(nfts);
+  }
+
   const apiKey = process.env.REACT_APP_GECKO || "";
 
+  // BTC => USD Conversion Rate
   async function getBtcToUsdRate() {
     try {
       const response = await axios.get(
@@ -84,11 +95,99 @@ function Nft() {
     }
   }
 
+  const tokenSymbol = "ordinals";
+  const coingeckoUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${tokenSymbol}&vs_currencies=usd`;
+
+  const fetchTokenPrice = async () => {
+    try {
+      const response = await axios.get(coingeckoUrl, {
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+      });
+
+      const price = response.data[tokenSymbol.toLowerCase()].usd;
+      console.log(`Current price of ${tokenSymbol}: $${price}`);
+    } catch (error) {
+      console.error("Error fetching token price:", error);
+    }
+  };
+
+  // const showMessageWithDelay = () => {
+  //   setTimeout(() => {
+  //     fetchTokenPrice();
+  //   }, 30000); // Delay of 2 seconds
+  // };
+
+  const getBrc20Tokens = async () => {
+    try {
+      const response = await axios.get("", {
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+      });
+      //   const brc20Tokens = response.data.filter((coin: { id: string, name: string, symbol: string, description: { en: string } }) => {
+      //   // Filter by tokens with "BRC-20" in their description (case-insensitive)
+      //   return coin.description.en.toLowerCase().includes('brc-20');
+      // });
+      const tokens = response.data;
+      // console.log(brc20Tokens);
+      console.log(tokens);
+    } catch (error) {
+      console.error("Error fetching BRC-20 tokens:", error);
+      return [];
+    }
+  };
+
+  // const showMessageWithDelay2 = () => {
+  //   setTimeout(() => {
+  //     getBrc20Tokens();
+  //   }, 60000); // Delay of 60 seconds
+  // };
+
+  const showMessageOfNoNfts = () => {
+    setTimeout(() => {
+      return (
+        <div style={{ textAlign: "center" }}>
+          <FrownOutlined
+            style={{ fontSize: 20, color: "#bfbfbf", paddingTop: 75 }}
+          />
+          <p style={{ color: "#bfbfbf" }}>
+            No NFTS available in the marketplace.
+          </p>
+        </div>
+      );
+    }, 2000); // Delay of 2 seconds
+  };
+
+  const getRate = () => {
+    setTimeout(() => {
+      getBtcToUsdRate();
+    }, 1000);
+  };
+
+  // Call fetchTokenPrice every 60 seconds
+  //  setInterval(fetchTokenPrice, 60000);
+
   // Makes Sure Updates Only Happen Once
   useEffect(() => {
     getNFTs();
-    getBtcToUsdRate();
+    getRate();
+    // getMarketNftTotal();
+
+    // showMessageWithDelay();
+    // showMessageWithDelay2();
   }, []);
+
+  useEffect(() => {
+    if (inscriptions.length > 0) {
+      getMarketNftTotal();
+      console.log("----- TOTAL NFTS IN MARKETPLACE -----");
+      console.log(totalNfts);
+    }
+  }, [inscriptions]);
 
   return (
     <>
@@ -115,161 +214,184 @@ function Nft() {
         </p>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          paddingTop: 50,
-          paddingLeft: 100,
-          overflowY: "scroll",
-          height: "calc(100vh - 200px)", // Set the height to fill the remaining viewport space
-          paddingBottom: 100,
-        }}
-      >
-        <Row gutter={60} style={{ overflowY: "scroll" }}>
-          {/* ------------------------- NFT Cards ------------------------- */}
-          {inscriptions.map((inscription) => (
-            <Col span={4.8} key={inscription.inscriptionId}>
-              <Card
-                hoverable
-                style={{
-                  width: "220px",
-                  height: "356px",
-                  // backgroundColor: "#f5f5f5",
-                  border: "1px solid #2b2a29",
-                  marginBottom: 60,
-                }}
-                cover={
-                  <div
-                    style={{
-                      // border: "1px solid grey",
-                      // borderRadius: "8px",
-                      // boxSizing: "border-box",
-                      backgroundSize: "cover",
-                      width: "100%",
-                      // height: "120px",
-                      // backgroundColor: "#5D647B",
-                    }}
-                  >
-                    {" "}
+      {totalNfts === 0 ? (
+        <div style={{ textAlign: "center" }}>
+          <FrownOutlined
+            style={{ fontSize: 20, color: "#bfbfbf", paddingTop: 75 }}
+          />
+          <p style={{ color: "#bfbfbf" }}>No NFTs in marketplace.</p>
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            paddingTop: 50,
+            paddingLeft: 100,
+            overflowY: "scroll",
+            height: "calc(100vh - 200px)", // Set the height to fill the remaining viewport space
+            paddingBottom: 100,
+          }}
+        >
+          <Row gutter={60} style={{ overflowY: "scroll" }}>
+            {/* ------------------------- NFT Cards ------------------------- */}
+            {inscriptions.map((inscription) => (
+              <Col span={4.8} key={inscription.inscription_id}>
+                <Card
+                  hoverable
+                  style={{
+                    width: "220px",
+                    height: "356px",
+                    // backgroundColor: "#f5f5f5",
+                    border: "1px solid #2b2a29",
+                    marginBottom: 60,
+                    padding: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    position: "relative", // Add this line
+                  }}
+                  className="card-no-padding"
+                  cover={
                     <div
-                      className="titleLeftAlign"
                       style={{
-                        paddingTop: "0px",
-                        marginTop: "10px",
+                        // border: "1px solid grey",
+                        // borderRadius: "8px",
+                        // boxSizing: "border-box",
+                        backgroundSize: "cover",
+                        width: "100%",
+                        // height: "120px",
+                        // backgroundColor: "#5D647B",
                       }}
                     >
-                      {/* ---------- Inscription Name ---------- */}
-                      <span
+                      {" "}
+                      <div
                         style={{
-                          textAlign: "left",
-                          fontWeight: "600",
-                          color: "#2b2a29",
+                          paddingTop: "0px",
+                          marginTop: "10px",
                         }}
                       >
-                        {inscriptionName}
-                      </span>
-
-                      {/* ---------- Inscription Number ---------- */}
-                      <span
-                        style={{
-                          color: "#5D647B",
-                          fontWeight: "bold",
-                          fontSize: "11px",
-                          marginLeft: "2px",
-                        }}
-                      >
-                        #
-                      </span>
-                      <span style={{ textAlign: "left", color: "#2b2a29" }}>
-                        {inscription.inscriptionNumber}
-                      </span>
-                    </div>
-                    {/* ---------- NFT Content ---------- */}
-                    <img
-                      alt={`inscription: ${inscription.inscriptionNumber}`}
-                      src={`${contentPrefix}/${inscription.inscriptionId}`}
-                      style={{
-                        height: "202.8px",
-                        width: "202.8px",
-
-                        border: "1px solid grey",
-                        borderRadius: "8px",
-                        boxSizing: "border-box",
-                      }}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                }
-              >
-                {/* ------------------------- NFT Info ------------------------- */}
-                <Space>
-                  <Meta
-                    title={""}
-                    description={
-                      <div style={{ marginTop: "30px" }}>
-                        {/* ---------- BTC Image ---------- */}
-                        <img
-                          id="logo"
-                          src={btcLogo}
-                          style={{
-                            height: "20px",
-                            width: "20px",
-                          }}
-                          alt="btc-logo"
-                        ></img>
-
-                        {/* ---------- Price ---------- */}
+                        {/* ---------- Inscription Name ---------- */}
                         <span
                           style={{
-                            color: "#5D647B",
-                            fontWeight: "600",
-                            fontSize: "14px",
-                            marginLeft: "2px",
-                            marginTop: "13px",
                             textAlign: "left",
+                            fontWeight: "600",
+                            color: "#2b2a29",
                           }}
+                          className="titleLeftAlign"
                         >
-                          {" "}
-                          {inscriptionPrice}
+                          {inscription.name}
                         </span>
 
-                        {/* ---------- Currency Unit: Sats ---------- */}
+                        {/* ---------- Inscription Number ---------- */}
                         <span
                           style={{
                             color: "#5D647B",
                             fontWeight: "bold",
-                            fontSize: "10px",
+                            fontSize: "11px",
                             marginLeft: "2px",
                           }}
                         >
-                          sats
+                          #
                         </span>
-
-                        {/* ---------- Bitcoin to USD Conversion Rate ---------- */}
-                        <span>
-                          $
-                          {convertBtcToUsd
-                            ? (
-                                convertBtcToUsd *
-                                (Number(inscriptionPrice) / 100000000)
-                              ).toFixed(2)
-                            : "Loading..."}
+                        <span style={{ textAlign: "left", color: "#2b2a29" }}>
+                          {inscription.inscription_number}
                         </span>
                       </div>
-                    }
-                  />
-                </Space>
-                {/* ---------- Buy Button ---------- */}
-                <Button style={{ width: "100%" }} onClick={buyNFT}>
-                  Buy
-                </Button>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </div>
+                      {/* ---------- NFT Content ---------- */}
+                      <img
+                        alt={`inscription: ${inscription.inscription_number}`}
+                        src={`${contentPrefix}/${inscription.inscription_id}`}
+                        style={{
+                          height: "202.8px",
+                          width: "202.8px",
+
+                          border: "1px solid grey",
+                          borderRadius: "8px",
+                          boxSizing: "border-box",
+                        }}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                  }
+                >
+                  {/* ------------------------- NFT Info ------------------------- */}
+                  <Space>
+                    <Meta
+                      title={""}
+                      description={
+                        <div style={{ marginTop: "30px" }}>
+                          {/* ---------- BTC Image ---------- */}
+                          <div
+                            style={{
+                              marginBottom: 10,
+                            }}
+                            className="test"
+                          >
+                            <img
+                              id="logo"
+                              src={btcLogo}
+                              style={{
+                                height: "20px",
+                                width: "20px",
+                              }}
+                              alt="btc-logo"
+                            ></img>
+
+                            {/* ---------- Price ---------- */}
+                            <span
+                              style={{
+                                color: "#5D647B",
+                                fontWeight: "600",
+                                fontSize: "14px",
+                                marginLeft: "2px",
+                                marginTop: "13px",
+                                textAlign: "left",
+                              }}
+                            >
+                              {" "}
+                              {inscription.price}
+                            </span>
+
+                            {/* ---------- Currency Unit: Sats ---------- */}
+                            <span
+                              style={{
+                                color: "#5D647B",
+                                fontWeight: "bold",
+                                fontSize: "10px",
+                                marginLeft: "2px",
+                              }}
+                            >
+                              sats
+                            </span>
+
+                            {/* ---------- Bitcoin to USD Conversion Rate ---------- */}
+                            <span>
+                              $
+                              {convertBtcToUsd
+                                ? (
+                                    convertBtcToUsd *
+                                    (Number(inscription.price) / 100000000)
+                                  ).toFixed(2)
+                                : "Loading..."}
+                            </span>
+                          </div>
+                        </div>
+                      }
+                    />
+                  </Space>
+                  {/* ---------- Buy Button ---------- */}
+                  <Button style={{ width: "80%" }} onClick={buyNFT}>
+                    Buy
+                  </Button>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      )}
     </>
   );
 }
@@ -285,4 +407,5 @@ UniSat API Endpoints - https://open-api-testnet.unisat.io/swagger.html
 Inscription Example - https://testnet.unisat.io/inscription/0451d8f8f3181834262df077420d1c8701791c81345f17a8410e07e7c649e92ei0
 Marketplace Example - https://www.gate.io/web3/inscription-market/bitcoin/brc-nft
 Coin Gecko API - https://docs.coingecko.com/v3.0.1/reference/introduction
+Carousel - https://ant.design/components/carousel
 */
