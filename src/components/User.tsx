@@ -235,7 +235,7 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
                   color: "#5D647B",
                 }}
               >
-                CHARTS
+                {/* CHARTS */}
               </h1>
             </div>
           </Space>

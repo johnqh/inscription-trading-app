@@ -51,6 +51,12 @@ function NftHoldings({ address }: NftHoldingsProps) {
       console.log("----- ADDRESS IN GET NFTS --------");
       console.log(address);
 
+      // let res = await unisat.getAccounts();
+      // let address2 = res.data;
+
+      // console.log("----- ADDRESS 2-----");
+      // console.log(address2);
+
       // Retreive User's Inscription from Database (UniSat API)
       const response = await axios.get(
         apiPrefix + `/holdings/nft?address=${address}`
@@ -150,15 +156,16 @@ function NftHoldings({ address }: NftHoldingsProps) {
       console.log("---PRICE IN ON FINISH ----");
       console.log(values);
 
-      // let txid = await unisat.sendInscription(
-      //   exchangeWallet,
-      //   nftClicked.inscriptionId,
-      //   { feeRate: 20 }
-      // );
+      // Send the Inscription to the Exchange
+      let txid = await unisat.sendInscription(
+        exchangeWallet,
+        nftClicked.inscriptionId,
+        { feeRate: 20 }
+      );
 
       let orderForm = {
         seller_address: address,
-        txid: "abc",
+        txid: txid,
         inscription_id: nftClicked.inscriptionId,
         inscription_number: nftClicked.inscriptionNumber,
         price: values.price,
@@ -410,7 +417,7 @@ function NftHoldings({ address }: NftHoldingsProps) {
               {`Zoro`} <span style={{ fontSize: 24 }}>#</span>
               {nftClicked.inscriptionId}
             </h1>
-            <h4 style={{ marginTop: "-8px", color: "#5D647B" }}>
+            <h4 style={{ marginTop: "-8px", color: "#5D647B", fontSize: "14px" }}>
               Inscription No. <span style={{ fontSize: 12 }}>#</span>
               {nftClicked.inscriptionNumber}
             </h4>

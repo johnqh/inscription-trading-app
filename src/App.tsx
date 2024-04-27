@@ -123,7 +123,7 @@ function App() {
           ></Market>
         );
       case "nft":
-        return <Nft></Nft>;
+        return <Nft address={accounts[0]}></Nft>;
 
       default:
         break;

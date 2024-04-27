@@ -11,11 +11,10 @@ const contentPrefix = "https://static-testnet.unisat.io/content";
 // let inscriptionPrice = 50023;
 
 const apiPrefix = "http://localhost:3000";
-let address: string;
 
 const exchangeWallet = process.env.EXCHANGE_WALLET || "";
 
-function Nft() {
+function Nft({address} : {address: string}) {
   const [inscriptions, setInscriptions] = useState<any[]>([]);
   const [convertBtcToUsd, setConvertBtcToUsd] = useState(0);
   const [totalNfts, setTotalNfts] = useState(0);
@@ -25,10 +24,6 @@ function Nft() {
   /* ----------------------------------- Retrieve Info from Database ----------------------------------- */
   async function getNFTs() {
     try {
-      // User's Address
-      let addressResponse = await unisat.getAccounts();
-      address = addressResponse[0];
-
       // Retreive User's Inscription from Database (UniSat API)
       const response = await axios.get(
         // apiPrefix + `/holdings/nft?address=${address}`
@@ -77,19 +72,21 @@ function Nft() {
   /* ----------------------------------- Order: Buy NFTs ----------------------------------- */
 
   // Buyer's Order Details
-  async function buyNFT() {
+  async function buyNFT(inscription: any) {
     try {
       let txid = "";
-      let price = 2;
-      txid = await unisat.sendBitcoin(exchangeWallet, price, { feeRate: 30 });
 
-      const addresses = await unisat.getAccounts();
-      const address = addresses ? addresses[0] : null;
+      console.log("----INSCRIPTION IN GET NFT -----");
+      console.log(inscription);
+
+      txid = await unisat.sendBitcoin(exchangeWallet, inscription.price, {
+        feeRate: 20,
+      });
 
       // Update NFT Order - Seller Populated Order when Listing NFT, So Only Need to Add Buyer's Address
-      // await axios.put(`${apiPrefix}/nft_orders/${inscriptionId}`, {
-      //   fulfilled: 1,
-      // });
+      await axios.put(`${apiPrefix}/nft_orders/${inscription.id}`, {
+        buyer_address: address,
+      });
     } catch (e: any) {
       console.log(e);
     }
@@ -383,7 +380,12 @@ function Nft() {
                     />
                   </Space>
                   {/* ---------- Buy Button ---------- */}
-                  <Button style={{ width: "80%" }} onClick={buyNFT}>
+                  <Button
+                    style={{ width: "80%" }}
+                    onClick={() => {
+                      buyNFT(inscription);
+                    }}
+                  >
                     Buy
                   </Button>
                 </Card>

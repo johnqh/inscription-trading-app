@@ -39,13 +39,18 @@ interface MarketProps {
   setOrderType: (type: string) => void;
 }
 
-function Market({ address, selectedToken, setSelectedToken, orderType, setOrderType}: MarketProps) {
+function Market({
+  address,
+  selectedToken,
+  setSelectedToken,
+  orderType,
+  setOrderType,
+}: MarketProps) {
   const [tokens, setTokens] = useState<any[]>([]);
-  // const [orderType, setOrderType] = useState(orderFormType || "buy");
-  // const [selectedToken, setSelectedToken] = useState("");
   const [buySpotPrice, setBuySpotPrice] = useState(0);
   const [sellSpotPrice, setSellSpotPrice] = useState(0);
   const [orderPrice, setOrderPrice] = useState(0);
+  const [formValid, setFormValid] = useState(false);
 
   const [form] = Form.useForm();
 
@@ -90,6 +95,7 @@ function Market({ address, selectedToken, setSelectedToken, orderType, setOrderT
             if (order.price < buyerSpotPrice) {
               buyerSpotPrice = order.price;
             }
+            console.log("---- Buyer Spot Price in FOr Loop -----");
             console.log(buyerSpotPrice);
           }
 
@@ -112,8 +118,11 @@ function Market({ address, selectedToken, setSelectedToken, orderType, setOrderT
         sellerSpotPrice = 0;
       }
 
-      setSellSpotPrice(sellerSpotPrice);
-      setBuySpotPrice(buyerSpotPrice);
+      await setSellSpotPrice(sellerSpotPrice);
+      await setBuySpotPrice(buyerSpotPrice);
+
+      console.log("---- Buyer Spot Price in AT END OF GET SPOT PRICE -----");
+      console.log(buyerSpotPrice);
 
       console.log("------SELL SPOT PRICE------");
       console.log(sellSpotPrice);
@@ -137,6 +146,19 @@ function Market({ address, selectedToken, setSelectedToken, orderType, setOrderT
     getSpotPrice();
   }, [selectedToken]);
 
+  // Default Order Price to the Spot Price if Blank
+  // useEffect(() => {
+  //   console.log("---- ORDER TYPE PRICE IN USE EFFECT -----");
+  //   console.log(orderPrice);
+
+  //   if (orderPrice < 0) {
+  //     setOrderPrice(orderType === "buy" ? buySpotPrice : sellSpotPrice);
+  //   }
+
+  //   console.log("---- SPOT PRICE IN USE EFFECT -----");
+  //   console.log(buySpotPrice);
+  // }, [buySpotPrice, sellSpotPrice]);
+
   /* ----------------------------------- Order Form ----------------------------------- */
 
   // Field Type's for Order Form
@@ -153,7 +175,7 @@ function Market({ address, selectedToken, setSelectedToken, orderType, setOrderT
 
       // Make Sure the User Selects a Specific Token to Buy or Sell
       if (selectedToken === "") {
-        alert("Oops! You didn't select a token.");
+        message.error("Oops! You didn't select a token.");
         return;
       }
 
@@ -226,9 +248,9 @@ function Market({ address, selectedToken, setSelectedToken, orderType, setOrderT
     } catch (e: any) {
       console.log(e);
       if (e.code === 4001) {
-        alert("Rejected the transaction");
+        message.error("Rejected the transaction");
       } else {
-        alert("Wallet not connected");
+        message.error("Wallet not connected");
       }
     }
   };
@@ -332,8 +354,6 @@ function Market({ address, selectedToken, setSelectedToken, orderType, setOrderT
           <Col
             span={8}
             style={{
-              // height: "calc(100vh - 200px)", // Set the height to fill the remaining viewport space
-
               paddingBottom: 200,
             }}
           >
@@ -395,6 +415,7 @@ function Market({ address, selectedToken, setSelectedToken, orderType, setOrderT
                 onFinish={onFinish}
                 onFinishFailed={onFinishFailed}
                 autoComplete="off"
+                disabled = {!selectedToken}
               >
                 {/* ---------- Buy/Sell Radio Buttons ---------- */}
                 <Form.Item label="Order" name="order">
@@ -433,10 +454,7 @@ function Market({ address, selectedToken, setSelectedToken, orderType, setOrderT
                     min={1}
                     addonAfter={selectAfter}
                     onChange={(price) => {
-                      setOrderPrice(
-                        price ||
-                          (orderType === "buy" ? buySpotPrice : sellSpotPrice)
-                      );
+                      setOrderPrice(price || 0);
                     }}
                   />
                 </Form.Item>
@@ -502,32 +520,42 @@ function Market({ address, selectedToken, setSelectedToken, orderType, setOrderT
                     <Popconfirm
                       title="Buy order"
                       description={
-                        <span>
-                          Are you sure you want to{" "}
-                          <strong>
-                            <span style={{ color: "#296e01" }}>buy</span>{" "}
-                            {selectedToken}
-                          </strong>{" "}
-                          at the{" "}
-                          <u>
-                            {orderPrice === buySpotPrice
-                              ? "market price"
-                              : "price"}
-                          </u>{" "}
-                          of <strong>{orderPrice} sats</strong>?
-                        </span>
+                        !formValid ? (
+                          <span>please enter a size</span>
+                        ) : (
+                          <span>
+                            Are you sure you want to{" "}
+                            <strong>
+                              <span style={{ color: "#296e01" }}>buy</span>{" "}
+                              {selectedToken}
+                            </strong>{" "}
+                            at the{" "}
+                            <u>{orderPrice ? "price" : "market price"}</u> of{" "}
+                            <strong>
+                              {orderPrice ||
+                                (orderType === "buy"
+                                  ? buySpotPrice
+                                  : sellSpotPrice)}{" "}
+                              sats
+                            </strong>
+                            ?
+                          </span>
+                        )
                       }
                       onConfirm={() => {
                         form.submit();
                       }}
                       onCancel={cancelBuy}
-                      okText="Yes"
-                      cancelText="No"
+                      okText={!formValid ? "Ok" : "Yes"}
+                      cancelText={!formValid ? "Cancel" : "No"}
                     >
                       <Button
                         type="primary"
                         // htmlType="submit"
                         style={{ backgroundColor: "#5D647B" }}
+                        onClick={() => {
+                          setFormValid(form.getFieldValue("size") != null);
+                        }}
                       >
                         Buy
                       </Button>
@@ -536,32 +564,42 @@ function Market({ address, selectedToken, setSelectedToken, orderType, setOrderT
                     <Popconfirm
                       title="Sell order"
                       description={
-                        <span>
-                          Are you sure you want to{" "}
-                          <strong>
-                            <span style={{ color: "#d92121" }}>sell</span>{" "}
-                            {selectedToken}
-                          </strong>{" "}
-                          at the{" "}
-                          <u>
-                            {orderPrice === sellSpotPrice
-                              ? "market price"
-                              : "price"}
-                          </u>{" "}
-                          of <strong>{orderPrice} sats</strong>?
-                        </span>
+                        !formValid ? (
+                          <span>please enter a size</span>
+                        ) : (
+                          <span>
+                            Are you sure you want to{" "}
+                            <strong>
+                              <span style={{ color: "#296e01" }}>sell</span>{" "}
+                              {selectedToken}
+                            </strong>{" "}
+                            at the{" "}
+                            <u>{orderPrice ? "price" : "market price"}</u> of{" "}
+                            <strong>
+                              {orderPrice ||
+                                (orderType === "buy"
+                                  ? buySpotPrice
+                                  : sellSpotPrice)}{" "}
+                              sats
+                            </strong>
+                            ?
+                          </span>
+                        )
                       }
                       onConfirm={() => {
                         form.submit();
                       }}
                       onCancel={cancelSell}
-                      okText="Yes"
-                      cancelText="No"
+                      okText={!formValid ? "Ok" : "Yes"}
+                      cancelText={!formValid ? "Cancel" : "No"}
+                      // disabled = {!formValid}
                     >
                       <Button
                         type="primary"
-                        htmlType="submit"
                         style={{ backgroundColor: "#5D647B" }}
+                        onClick={() => {
+                          setFormValid(form.getFieldValue("size") != null);
+                        }}
                       >
                         Sell
                       </Button>
