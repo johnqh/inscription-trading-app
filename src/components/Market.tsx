@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios"; // HTTP requests
-import userService from "../services/user";
+import emojiRegex from "emoji-regex";
+
 
 import {
+  Table,
+  Tag,
   Button,
   List,
   Row,
@@ -20,69 +23,72 @@ let apiPrefix = "http://localhost:3000";
 
 const apiKey = process.env.REACT_APP_API_KEY || "";
 const apiUrl =
-  "https://open-api-testnet.unisat.io/v1/indexer/brc20/list?start=0&limit=25";
+  "https://open-api-testnet.unisat.io/v1/indexer/brc20/list?start=0&limit=75";
 console.log("WALLET_PRIVATE_KEY:", process.env.REACT_APP_API_KEY);
 
-function Market({ address }: { address: string }) {
+interface TokenDetail {
+  id: string;
+  side: string;
+  amt: number;
+  price: number;
+}
+
+function Market() {
   const [tokens, setTokens] = useState<any[]>([]);
+  const [tokenDetails, setTokenDetails] = useState<TokenDetail[]>([]);
   const [orderType, setOrderType] = useState("buy");
   const [selectedToken, setSelectedToken] = useState("");
-  const [holdings, setHoldings] = useState<any[]>([]);
-  const [dispText, setDispText] = useState("");
-  const [fetchedHoldings, setFetchedHoldings] = useState(false);
-
-  // Outside of the function to help cache
-  let responseData: any = null; // Define a variable to store the response data
-  let sellList: string[] = []; // Variable to store list of sellable tokens
 
   async function getTokens() {
+    let responseData: any; // Define a variable to store the response data
 
-    // only sell tokens that a user has
-    if (orderType === "buy") {
-      try {
-        if (!responseData) { // Try to cache data fetched
-          const response = await axios.get(apiUrl, {
-            headers: {
-              accept: "application/json",
-              Authorization: `Bearer ${apiKey}`,
-            },
-          });
-          responseData = response.data.data.detail;
-        }
-      } catch (error: any) {
-          console.error("Error:", error.message);
-          return null;
-      }
-      console.log("-----RESPONSE DATA-----");
-      console.log(responseData);
-      setTokens(responseData);
-      setDispText("Top BRC-20 Tokens");
-      console.log("LENGTH: " + tokens.length);
-    } else {
-      if (!fetchedHoldings) {
-        userService.getHoldings(address).then((data) => {
-            setFetchedHoldings(true);
-            setHoldings(data);
-        });
-      }
-
-      holdings.forEach((holding) => {
-        if (holding.amt > 0) {
-          sellList.push(holding.tick)
-        }
+    try {
+      const response = await axios.get(apiUrl, {
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
       });
+      responseData = response.data;
+    } catch (error: any) {
+      console.error("Error:", error.message);
+      return null;
+    }
 
-      setTokens(sellList);
-      setDispText("Your Tokens");
+    console.log("-----RESPONSE DATA-----");
+    console.log(responseData);
+    setTokens(responseData.data.detail);
+    console.log("LENGTH: " + tokens.length);
+  }
+
+// converting emoji to string
+  const emojiRegexPattern = emojiRegex();
+  const isEmoji = (token: string) => {
+    return emojiRegexPattern.test(token);
+  };
+
+  const convertEmojiToUnicode = (token: string) => {
+    return isEmoji(token) ? `U+${token.codePointAt(0)?.toString(16).toUpperCase()}` : token;
+  };
+
+  async function getTokenDetails(tick: string) {
+    const processedTick = convertEmojiToUnicode(tick);
+    try {
+      const response = await axios.get(`${apiPrefix}/orders?tick=${encodeURIComponent(processedTick)}`);
+      setTokenDetails(response.data);
+    } catch (error: any) {
+      console.error("Error fetching token details:", error);
+      setTokenDetails([]);
     }
   }
 
+
   let unisat = (window as any).unisat;
 
-  // Update if the ordertype changes
+  // Makes Sure Updates Only Happen Once
   useEffect(() => {
     getTokens();
-  }, [orderType, address, holdings]);
+  }, []);
 
   type FieldType = {
     size?: number;
@@ -185,6 +191,29 @@ function Market({ address }: { address: string }) {
     message.error("Aw-shucks! Coins weren't added to your wallet.");
   };
 
+  const columns = [
+    {
+      title: 'Order Type',
+      dataIndex: 'side',
+      key: 'side',
+      render: (side: number) => {
+        let color = side === 1 ? 'green' : 'red'; 
+        let text = side === 1 ? 'Buy' : 'Sell';  
+        return <Tag color={color}>{text}</Tag>;
+      },
+    },
+    {
+      title: 'Amount',
+      dataIndex: 'amt',
+      key: 'amt',
+    },
+    {
+      title: 'Price',
+      dataIndex: 'price',
+      key: 'price',
+    },
+  ];
+
   return (
     <>
       <Space direction="vertical" size="middle" style={{ display: "flex" }}>
@@ -192,13 +221,14 @@ function Market({ address }: { address: string }) {
           {/* ------------------------- List of Tokens ------------------------- */}
           <Col span={8}>
             <List
-              header={<div>{dispText}</div>}
+              header={<div>Top BRC-20 Tokens</div>}
               bordered
               dataSource={tokens}
               renderItem={(token) => (
                 <List.Item
                   onClick={() => {
                     setSelectedToken(token);
+                    getTokenDetails(token);
                     console.log(token);
                   }}
                   style={{
@@ -214,11 +244,26 @@ function Market({ address }: { address: string }) {
                   </div>
                 </List.Item>
               )}
-              locale={{ emptyText: "" }}
+              locale={{ emptyText: "No tokens found" }}
             />
           </Col>
           {/* ------------------------- Order Book ------------------------- */}
-          <Col span={8}></Col>
+          <Col span={8}>
+            {tokenDetails && tokenDetails.length > 0 ? (
+               <div>
+              <h2>Outstanding Orders for {selectedToken}</h2>
+              <Table
+                dataSource={tokenDetails}
+                columns={columns}
+                rowKey="id"
+                pagination={false}
+                style={{ width: '100%' }}
+              />
+            </div>
+            ) : (
+              <p>Select a token to view details</p>
+            )}
+          </Col>
           {/* ------------------------- Order Form: Buy or Sell ------------------------- */}
           <Col span={8}>
             <Form
