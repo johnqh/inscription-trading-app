@@ -92,7 +92,7 @@ function App() {
           </>
         );
       case "market":
-        return <Market address={accounts[0]}></Market>;
+        return <Market />;
       default:
         break;
     }
