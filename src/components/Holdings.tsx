@@ -4,6 +4,7 @@ import { FrownOutlined } from "@ant-design/icons";
 import axios from "axios"; // HTTP requests
 import btcLogo from "../images/btc-logo.png";
 import logo from "../images/Zorro Cat Logo.png";
+import getSpotPrice from "../services/spot_price";
 
 export type Holding = {
   tick: string;
@@ -21,22 +22,28 @@ const customizeRenderEmpty = () => (
 
 interface HoldingsProps {
   holdings: Holding[];
-  setMenuItem: (item: string) => void; // Allows setting up where a button or a hyperlink can link.
-  setSelectedToken: (token: string) => void; // Want to link to the market of the selected token the user selects
-  setOrderType: (type: string) => void;
+  setMenuItem: (item: string) => void; // Allows Setting up where a Button or a Hyperlink can Link.
+  setSelectedToken: (token: string) => void; // Want to link to the Market of the Selected Token the User Selects
+  setOrderType: (type: string) => void; // Buy or Sell Buton
 }
 
-function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: HoldingsProps) {
+function Holdings({
+  holdings,
+  setMenuItem,
+  setSelectedToken,
+  setOrderType,
+}: HoldingsProps) {
   const [totalTokens, setTotalTokens] = useState(0);
   const [tick, setTick] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [tokenClicked, setTokenClicked] = useState(false);
   const [inscriptionData, setInscriptionData] = useState<any>({});
-  // const [selectedToken, setSelectedToken] = useState("");
   const [tokenChosen, setTokenChosen] = useState("");
+  const [spotPrices, setSpotPrices] = useState<number[]>([]);
 
   const apiKey = process.env.REACT_APP_API_KEY || "";
 
+  // BRC-20 Data for Modal
   async function inscriptionInfo(ticker: string) {
     try {
       const response = await axios.get(
@@ -56,6 +63,7 @@ function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: Ho
     }
   }
 
+  // Get User's List of Tokens
   async function getSummary() {
     const elements = [];
     let tokens = 0;
@@ -76,11 +84,12 @@ function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: Ho
               href="/"
               onClick={async (e) => {
                 e.preventDefault(); // To avoid href linking instead want setMenuItem to do so
+                setSpotPrices((await getSpotPrice(token.tick)) || []);
                 setTokenClicked(true);
                 setSelectedToken(token.tick);
                 setTokenChosen(token.tick);
                 await inscriptionInfo(token.tick); // Call details function with token.tick
-                setModalOpen(true);
+                setModalOpen(true); // Click on link (token) open modal
               }}
             >
               {typeof token === "boolean" ? (
@@ -94,6 +103,7 @@ function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: Ho
                   }
                   alt=""
                   onError={onImageError}
+                  onLoad={onImageLoad}
                   style={{
                     height: "20px",
                     width: "20px",
@@ -139,13 +149,19 @@ function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: Ho
     }
   }
 
+  /* ----------------------------------- Image Handling ----------------------------------- */
   const onImageError = (e: any) => {
     e.target.style.display = "none";
+  };
+
+  const onImageLoad = (e: any) => {
+    e.target.style.display = "";
   };
 
   return (
     <div>
       <Space direction="vertical" size="middle" style={{ display: "flex" }}>
+        {/* ---------- Card Title ---------- */}
         <Card
           title="Tokens"
           styles={{ header: headStyle }}
@@ -154,6 +170,8 @@ function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: Ho
         >
           {totalTokens}
         </Card>
+
+        {/* ---------- User's Token List ---------- */}
         <ConfigProvider renderEmpty={customizeRenderEmpty}>
           <List
             bordered
@@ -163,6 +181,7 @@ function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: Ho
           />
         </ConfigProvider>
       </Space>
+
       {/* ------------------------------ Modal ------------------------------ */}
       <Modal
         title={
@@ -182,10 +201,12 @@ function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: Ho
         onOk={() => {
           setModalOpen(false);
           setTokenClicked(false);
+          setSelectedToken("");
         }}
         onCancel={() => {
           setModalOpen(false);
           setTokenClicked(false);
+          setSelectedToken("");
         }}
         style={{ backgroundColor: "#5D647B" }}
       >
@@ -196,26 +217,33 @@ function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: Ho
             alignItems: "center",
           }}
         >
+          {/* ---------- Token Image ---------- */}
           <div style={{}}>
             {typeof tokenChosen === "boolean" ? (
               ""
             ) : (
               <img
-                src={inscriptionData.ticker === 'ZORO' ? logo : `https://next-cdn.unisat.io/_/img/tick/${inscriptionData.ticker}.png`}
+                src={
+                  inscriptionData.ticker === "ZORO"
+                    ? logo
+                    : `https://next-cdn.unisat.io/_/img/tick/${inscriptionData.ticker}.png`
+                }
                 alt={`${inscriptionData.ticker}`}
                 style={{
                   height: "80px",
                   width: "80px",
                   marginBottom: -5,
                   marginRight: 3,
-                  paddingLeft: 50,
+                  paddingLeft: 25,
+                  paddingRight: 20,
                 }}
                 onError={onImageError}
+                onLoad={onImageLoad}
               />
             )}
           </div>
 
-          {/* ---------- Token Details ---------- */}
+          {/* ---------- Token Identifier Details ---------- */}
           <div
             style={{
               display: "flex",
@@ -223,6 +251,7 @@ function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: Ho
               paddingRight: 150,
               paddingTop: "",
               marginTop: "20px",
+              flexGrow: 1,
             }}
           >
             <h1>
@@ -241,74 +270,71 @@ function Holdings( { holdings, setMenuItem, setSelectedToken, setOrderType }: Ho
                 display: "flex",
                 alignItems: "baseline",
                 marginTop: "-20px",
+                marginBottom: "10px",
               }}
-            >
-              <img
-                id="logo"
-                src={btcLogo}
-                style={{
-                  height: "20px",
-                  width: "20px",
-                  marginTop: "5px",
-                }}
-                alt="btc-logo"
-              ></img>
+            ></div>
 
-              <span
-                style={{
-                  marginLeft: "3px",
-                }}
-              >
-                30
-              </span>
-              <span
-                style={{
-                  color: "#5D647B",
-                  fontWeight: "bold",
-                  fontSize: "10px",
-                  marginLeft: "2px",
-                  marginTop: "13px",
-                }}
-              >
-                sats
-              </span>
-            </div>
-
-            {/* ---------- Buy / Sell Buttons ---------- */}
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 marginBottom: 20,
+                width: "100&",
               }}
             >
-              <Button
-                onClick={() => {
-                   setOrderType("buy");
-                  setMenuItem("market");
-              
-                }}
-                style={{ marginTop: 30 }}
-              >
-                Buy
-              </Button>
-              <Button
-                onClick={() => {
-                  setOrderType("sell");
-                  setMenuItem("market");
-                }}
-                style={{ marginTop: 30 }}
-              >
-                Sell
-              </Button>
+              {/* ---------- Buy / Sell Buttons ---------- */}
+              {spotPrices.map((price, index) => (
+                <div>
+                  <div>
+                    <img
+                      id="logo"
+                      src={btcLogo}
+                      style={{
+                        height: "20px",
+                        width: "20px",
+                        marginTop: "5px",
+                      }}
+                      alt="btc-logo"
+                    ></img>
+
+                    <span
+                      style={{
+                        marginLeft: "3px",
+                      }}
+                    >
+                      {spotPrices[index] || "—"}
+                    </span>
+                    <span
+                      style={{
+                        color: "#5D647B",
+                        fontWeight: "bold",
+                        fontSize: "10px",
+                        marginLeft: "2px",
+                        marginTop: "13px",
+                      }}
+                    >
+                      sats
+                    </span>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setOrderType(index === 0 ? "sell" : "buy");
+                      setMenuItem("market");
+                    }}
+                    style={{ marginTop: 20 }}
+                  >
+                    {index === 0 ? "Sell" : "Buy"}
+                  </Button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* ---------- Token Details ---------- */}
+        {/* ---------- Token General Details ---------- */}
         <div
           style={{
-            paddingLeft: 150,
+            paddingLeft: 120,
             display: "flex",
             justifyContent: "space-evenly",
             flexDirection: "row",

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { FrownOutlined } from "@ant-design/icons";
+import { ChartOptions } from "chart.js";
 
 export type Order = {
   id: number;
@@ -51,8 +52,6 @@ function calculateProfitsPerMonth(orders: Order[]) {
 function LineChart({ orders }: { orders: Order[] }) {
   const [sellOrders, setSellOrders] = useState<any>([]);
   const [allOrders, setAllOrders] = useState(0);
-  const [profits, setProfits] = useState(0);
-  const [profitsPerMonth, setProfitsPerMonth] = useState<any>({});
 
   async function getSummary() {
     const elements = [];
@@ -68,12 +67,11 @@ function LineChart({ orders }: { orders: Order[] }) {
 
     setSellOrders(elements);
     setAllOrders(totalOrders);
-    // console.log("----- BUY ORDERS ARRAY -----");
-    // console.log(sellOrders);
   }
 
   const monthlyProfits = calculateProfitsPerMonth(orders);
 
+  // Prepare Data for Line Chart
   const lineData = {
     labels: monthlyProfits.months,
     datasets: [
@@ -88,7 +86,7 @@ function LineChart({ orders }: { orders: Order[] }) {
     ],
   };
 
-  const lineOptions = {
+  const lineOptions: ChartOptions<"line"> = {
     plugins: {
       title: {
         display: true,
@@ -99,7 +97,7 @@ function LineChart({ orders }: { orders: Order[] }) {
           bottom: 30,
         },
         font: {
-          size: 16, // Specify the font size here
+          size: 16, 
         },
       },
     },
@@ -109,8 +107,7 @@ function LineChart({ orders }: { orders: Order[] }) {
       },
     },
 
-      maintainAspectRatio: false,
-    
+    maintainAspectRatio: false,
   };
 
   useEffect(() => {
@@ -128,7 +125,7 @@ function LineChart({ orders }: { orders: Order[] }) {
         </div>
       ) : (
         <Line
-          style={{ height: "350px" }}
+          style={{ height: "350px", border: "1px solid rgb(217, 217, 217)" }}
           data={lineData}
           options={lineOptions}
         />

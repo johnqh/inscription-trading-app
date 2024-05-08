@@ -1,5 +1,5 @@
 import { FrownOutlined } from "@ant-design/icons";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Bar } from "react-chartjs-2";
 
 export type Order = {
@@ -13,34 +13,18 @@ export type Order = {
   expired: number;
 };
 
-function BarChart({ orders }: { orders: Order[] }) {
-  const [buyOrders, setBuyOrders] = useState<any>([]);
-  const [allOrders, setAllOrders] = useState(0);
+interface BarProps {
+  orders: Order[];
+}
 
-  async function getSummary() {
-    const elements = [];
-
-    let totalOrders = 0;
-
-    for (let order of orders) {
-      totalOrders += 1;
-
-    //   console.log(order);
-      elements.push(order);
-    }
-
-    setBuyOrders(elements);
-    setAllOrders(totalOrders);
-    // console.log("----- BUY ORDERS ARRAY -----");
-    // console.log(buyOrders);
-  }
-
+function BarChart({ orders }: BarProps) {
+  // Prepare Data for Bar Chart
   const barData = {
-    labels: buyOrders.map((order: Order) => order.tick),
+    labels: orders.map((order) => order.tick),
     datasets: [
       {
         label: "Buys",
-        data: buyOrders.map((order: Order) => order.amt),
+        data: orders.map((order) => order.amt),
         backgroundColor: [
           "rgba(255, 99, 132, 0.2)",
           "rgba(54, 162, 235, 0.2)",
@@ -74,7 +58,7 @@ function BarChart({ orders }: { orders: Order[] }) {
           bottom: 30,
         },
         font: {
-          size: 16, // Specify the font size here
+          size: 16,
         },
       },
     },
@@ -83,22 +67,15 @@ function BarChart({ orders }: { orders: Order[] }) {
         beginAtZero: true,
       },
     },
-    maintainAspectRatio: false, // Add this line to allow customizing the aspect ratio
-    responsive: true, // Add this line to make the chart responsive
-    // aspectRatio: 5, // Adjust this value to increase the height of the chart
+    maintainAspectRatio: false,
+    responsive: true,
   };
 
-  useEffect(() => {
-    getSummary();
-    // console.log("----- BUY ORDERS ARRAY -----");
-    // console.log(buyOrders);
-    // console.log("----- TOTAL ORDERS -----");
-    // console.log(allOrders);
-  }, [orders]);
+  useEffect(() => {}, [orders]);
 
   return (
     <>
-      {allOrders === 0 ? (
+      {orders.length === 0 ? (
         <div style={{ textAlign: "center" }}>
           <FrownOutlined
             style={{ fontSize: 20, color: "#bfbfbf", paddingTop: 75 }}
@@ -106,7 +83,11 @@ function BarChart({ orders }: { orders: Order[] }) {
           <p style={{ color: "#bfbfbf" }}>No buys to chart</p>
         </div>
       ) : (
-        <Bar style={{height: "350px"}} data={barData} options={barOptions} />
+        <Bar
+          style={{ height: "350px", border: "1px solid rgb(217, 217, 217)" }}
+          data={barData}
+          options={barOptions}
+        />
       )}
     </>
   );
@@ -118,4 +99,5 @@ export default BarChart;
 -------------------- References --------------------
 Chart.js Bar Chart - https://www.chartjs.org/docs/latest/charts/bar.html
 Chart.js Configuration - https://www.geeksforgeeks.org/chart-js-title-configuration/#
+Bar Graph - https://wanuja18.medium.com/here-are-some-errors-which-i-faced-while-implementing-bar-chart-and-doughnut-chart-8d2cb639b632
 */

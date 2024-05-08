@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios"; // HTTP requests
+import userService from "../services/user";
+import emojiRegex from "emoji-regex";
 import {
+  Table,
+  Tag,
   Button,
   List,
   Row,
@@ -16,6 +20,7 @@ import {
   InputNumberProps,
   Select,
 } from "antd";
+import logo from "../images/Zorro Cat Logo.png";
 
 // Imports for Expiration Part of the Order Form
 import dayjs from "dayjs";
@@ -30,6 +35,13 @@ const { Option } = Select;
 const exchangeWallet = process.env.REACT_APP_EXCHANGE_WALLET || "";
 
 let apiPrefix = "http://localhost:3000";
+
+interface TokenDetail {
+  id: string;
+  side: string;
+  amt: number;
+  price: number;
+}
 
 interface MarketProps {
   address: string;
@@ -47,31 +59,63 @@ function Market({
   setOrderType,
 }: MarketProps) {
   const [tokens, setTokens] = useState<any[]>([]);
+  const [tokenDetails, setTokenDetails] = useState<TokenDetail[]>([]);
   const [buySpotPrice, setBuySpotPrice] = useState(0);
   const [sellSpotPrice, setSellSpotPrice] = useState(0);
   const [orderPrice, setOrderPrice] = useState(0);
   const [formValid, setFormValid] = useState(false);
+  const [dispText, setDispText] = useState("");
 
   const [form] = Form.useForm();
 
   /* ----------------------------------- Retrieving Info from Database ----------------------------------- */
   async function getTokens() {
-    let responseData: any; // Define a variable to store the response data
+    let responseData: any = null; // Define a variable to store the response data
 
-    try {
-      // Getting List of BRC-20 Tokens from Database (UniSat API)
-      const response = await axios.get(apiPrefix + "/deploy");
-      responseData = response.data;
-    } catch (error: any) {
-      console.error("Error:", error.message);
-      return null;
+    // only sell tokens that a user has
+    if (orderType === "buy") {
+      try {
+        if (!responseData) {
+          // Try to cache data fetched
+          // Getting List of BRC-20 Tokens from Database (UniSat API)
+          const response = await axios.get(apiPrefix + "/deploy");
+          responseData = response.data;
+        }
+      } catch (error: any) {
+        console.error("Error:", error.message);
+        return null;
+      }
+      setTokens(responseData);
+      setDispText("Top BRC-20 Tokens");
+    } else {
+      let sellList: string[] = []; // Variable to store list of sellable tokens
+      let holdingList: any[] = [];
+
+      const data = await userService.getHoldings(address);
+      holdingList = data;
+
+      holdingList.forEach((holding) => {
+        if (holding.amt > 0) {
+          sellList.push(holding.tick);
+        }
+      });
+
+      setTokens(sellList);
+      setDispText("Your Tokens");
     }
-
-    console.log("-----RESPONSE DATA-----");
-    console.log(responseData);
-    setTokens(responseData);
-    console.log("LENGTH: " + tokens.length);
   }
+
+  // converting emoji to string
+  const emojiRegexPattern = emojiRegex();
+  const isEmoji = (token: string) => {
+    return emojiRegexPattern.test(token);
+  };
+
+  const convertEmojiToUnicode = (token: string) => {
+    return isEmoji(token)
+      ? `U+${token.codePointAt(0)?.toString(16).toUpperCase()}`
+      : token;
+  };
 
   // Get The Spot Price for both Buyer & Seller
   async function getSpotPrice() {
@@ -84,19 +128,14 @@ function Market({
       let sellerSpotPrice = Number.MIN_SAFE_INTEGER;
       let buyerSpotPrice = Number.MAX_SAFE_INTEGER;
 
-      console.log(selectedToken);
       // Loop through Order Book
       for (let order of orders) {
         if (!order.fulfilled && order.tick === selectedToken) {
           // Spot Price for Buyer is Lowest Price Seller is Willing to Sell
           if (order.side === 0) {
-            console.log(order);
-
             if (order.price < buyerSpotPrice) {
               buyerSpotPrice = order.price;
             }
-            console.log("---- Buyer Spot Price in FOr Loop -----");
-            console.log(buyerSpotPrice);
           }
 
           // Spot Price for Seller is Greatest Price Buyer is Willing to Buy
@@ -108,8 +147,6 @@ function Market({
         }
       }
 
-      console.log("NUmber MIN: " + Number.MIN_SAFE_INTEGER);
-
       if (buyerSpotPrice === Number.MAX_SAFE_INTEGER) {
         buyerSpotPrice = 0;
       }
@@ -120,44 +157,40 @@ function Market({
 
       await setSellSpotPrice(sellerSpotPrice);
       await setBuySpotPrice(buyerSpotPrice);
-
-      console.log("---- Buyer Spot Price in AT END OF GET SPOT PRICE -----");
-      console.log(buyerSpotPrice);
-
-      console.log("------SELL SPOT PRICE------");
-      console.log(sellSpotPrice);
-      console.log("------BUY SPOT PRICE------");
-      console.log(buySpotPrice);
     } catch (error: any) {
       console.error("Error:", error.message);
       return null;
     }
   }
 
+  async function getTokenDetails(tick: string) {
+    if (!tick) {
+      return;
+    }
+    const processedTick = convertEmojiToUnicode(tick);
+    try {
+      const response = await axios.get(
+        `${apiPrefix}/orders?tick=${encodeURIComponent(processedTick)}`
+      );
+      setTokenDetails(response.data);
+    } catch (error: any) {
+      console.error("Error fetching token details:", error);
+      setTokenDetails([]);
+    }
+  }
+
   let unisat = (window as any).unisat;
 
-  // Makes Sure Updates Only Happen Once
+  // Update if the ordertype changes
   useEffect(() => {
     getTokens();
-  }, []);
+  }, [orderType, address]);
 
   // When a Token is Selected Retrieve it's Spot Price
   useEffect(() => {
     getSpotPrice();
+    getTokenDetails(selectedToken);
   }, [selectedToken]);
-
-  // Default Order Price to the Spot Price if Blank
-  // useEffect(() => {
-  //   console.log("---- ORDER TYPE PRICE IN USE EFFECT -----");
-  //   console.log(orderPrice);
-
-  //   if (orderPrice < 0) {
-  //     setOrderPrice(orderType === "buy" ? buySpotPrice : sellSpotPrice);
-  //   }
-
-  //   console.log("---- SPOT PRICE IN USE EFFECT -----");
-  //   console.log(buySpotPrice);
-  // }, [buySpotPrice, sellSpotPrice]);
 
   /* ----------------------------------- Order Form ----------------------------------- */
 
@@ -179,12 +212,6 @@ function Market({
         return;
       }
 
-      console.log("-----VALUES-------");
-      console.log(values);
-
-      console.log("EXCHANGE WALLET");
-      console.log(exchangeWallet);
-
       if (orderType === "buy" && values.size) {
         // Info Field for Price is Blank
         if (!orderPrice) {
@@ -194,8 +221,7 @@ function Market({
         // Buyer sends Payment (BTC) to Exchange for BRC-20 Tokens
         txid = await unisat.sendBitcoin(
           exchangeWallet,
-          values.size * orderPrice,
-          { feeRate: 30 }
+          values.size * orderPrice
         );
         confirmBuy();
       } else if (orderType === "sell" && values.size) {
@@ -203,9 +229,6 @@ function Market({
         if (!orderPrice) {
           setOrderPrice(sellSpotPrice);
         }
-        // Testing Purposes
-        console.log(selectedToken);
-        console.log(values.size);
 
         // Seller Inscribes Transfer (Pays UniSat for this Service): Need to Inscribe First before Transferring Tokens, Otherwise it Sends the Inscription not Token
         const inscription = await unisat.inscribeTransfer(
@@ -216,9 +239,9 @@ function Market({
         // Seller Sends BRC-20 Tokens to the Exchange
         txid = await unisat.sendInscription(
           exchangeWallet,
-          inscription.inscriptionId,
-          { feeRate: 10 }
+          inscription.inscriptionId
         );
+
         confirmSell();
       }
 
@@ -232,16 +255,13 @@ function Market({
         tick: selectedToken,
         side: orderType === "buy" ? 1 : 0,
         amt: values.size,
-        price: orderPrice,
+        price:
+          orderPrice || (orderType === "buy" ? buySpotPrice : sellSpotPrice),
         expiration: values.expiration || null,
         expired: 0,
         txid: txid,
         fulfilled: 0,
       };
-
-      // Testing Purposes
-      console.log(orderInfo);
-      console.log("Success:", values);
 
       // Create Order in the Database
       await axios.post(apiPrefix + "/orders", orderInfo);
@@ -315,9 +335,37 @@ function Market({
     message.error("Aw-shucks! Coins weren't added to your wallet.");
   };
 
+  /* ----------------------------------- Image Handling ----------------------------------- */
   const onImageError = (e: any) => {
     e.target.style.display = "none";
   };
+
+  const onImageLoad = (e: any) => {
+    e.target.style.display = "";
+  };
+
+  const columns = [
+    {
+      title: "Order Type",
+      dataIndex: "side",
+      key: "side",
+      render: (side: number) => {
+        let color = side === 1 ? "green" : "red";
+        let text = side === 1 ? "Buy" : "Sell";
+        return <Tag color={color}>{text}</Tag>;
+      },
+    },
+    {
+      title: "Amount",
+      dataIndex: "amt",
+      key: "amt",
+    },
+    {
+      title: "Price",
+      dataIndex: "price",
+      key: "price",
+    },
+  ];
 
   return (
     <>
@@ -358,7 +406,7 @@ function Market({
             }}
           >
             <List
-              header={<div>Top BRC-20 Tokens</div>}
+              header={<div>{dispText}</div>}
               style={{ maxHeight: "480px", overflowY: "scroll" }}
               bordered
               dataSource={tokens}
@@ -381,9 +429,14 @@ function Market({
                       ""
                     ) : (
                       <img
-                        src={`https://next-cdn.unisat.io/_/img/tick/${token}.png`}
+                        src={
+                          token === "ZORO"
+                            ? logo
+                            : `https://next-cdn.unisat.io/_/img/tick/${token}.png`
+                        }
                         alt=""
                         onError={onImageError}
+                        onLoad={onImageLoad}
                         style={{
                           height: "20px",
                           width: "20px",
@@ -397,11 +450,31 @@ function Market({
                   </div>
                 </List.Item>
               )}
-              locale={{ emptyText: "" }}
+              locale={{ emptyText: "No tokens found" }}
             />
           </Col>
           {/* ------------------------- Order Book ------------------------- */}
-          <Col span={8}></Col>
+          <Col span={8}>
+            {tokenDetails && tokenDetails.length > 0 ? (
+              <div>
+                <h2>Outstanding Orders for {selectedToken}</h2>
+                <Table
+                  dataSource={tokenDetails}
+                  columns={columns}
+                  rowKey="id"
+                  pagination={false}
+                  style={{
+                    width: "100%",
+                    maxHeight: "400px",
+                    overflowY: "scroll",
+                    paddingLeft: 65,
+                  }}
+                />
+              </div>
+            ) : (
+              <p>Select a token to view details</p>
+            )}
+          </Col>
           {/* ------------------------- Order Form: Buy or Sell ------------------------- */}
           <Col span={8} style={{}}>
             <div style={{}}>
@@ -415,7 +488,7 @@ function Market({
                 onFinish={onFinish}
                 onFinishFailed={onFinishFailed}
                 autoComplete="off"
-                disabled = {!selectedToken}
+                disabled={!selectedToken}
               >
                 {/* ---------- Buy/Sell Radio Buttons ---------- */}
                 <Form.Item label="Order" name="order">
@@ -483,8 +556,6 @@ function Market({
                     <Popconfirm
                       title="Place bid"
                       description="Are you sure you want to place a bid?"
-                      // onConfirm={confirmBid}
-                      // onCancel={cancelBid}
                       okText="Yes"
                       cancelText="No"
                     >
@@ -500,8 +571,6 @@ function Market({
                     <Popconfirm
                       title="Place ask"
                       description="Are you sure you want to place an ask?"
-                      // onConfirm={confirmAsk}
-                      // onCancel={cancelAsk}
                       okText="Yes"
                       cancelText="No"
                     >
@@ -551,7 +620,6 @@ function Market({
                     >
                       <Button
                         type="primary"
-                        // htmlType="submit"
                         style={{ backgroundColor: "#5D647B" }}
                         onClick={() => {
                           setFormValid(form.getFieldValue("size") != null);
@@ -592,7 +660,6 @@ function Market({
                       onCancel={cancelSell}
                       okText={!formValid ? "Ok" : "Yes"}
                       cancelText={!formValid ? "Cancel" : "No"}
-                      // disabled = {!formValid}
                     >
                       <Button
                         type="primary"

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { Row, Col, Card, Flex, Space } from "antd";
 import userService from "../services/user";
+import Records from "./Records";
 import Holdings from "./Holdings";
 import Orders from "./Orders";
 import btcLogo from "../images/btc-logo.png";
-import { Row, Col, Card, Flex, Space } from "antd";
 import NftHoldings from "./NftHoldings";
+import BubbleChart from "./BubbleChart";
 import DoughnutChart from "./DoughnutChart";
 import BarChart from "./BarChart";
 import LineChart from "./LineChart";
@@ -15,20 +17,25 @@ import {
   LineElement,
   PointElement,
   LinearScale,
+  BubbleController,
   Title,
   CategoryScale,
+  TimeScale,
   BarElement,
   Tooltip,
   Legend,
 } from "chart.js";
+
 Chart.register(ArcElement);
 Chart.register(
   BarElement,
   LineElement,
   PointElement,
   LinearScale,
+  BubbleController,
   Title,
   CategoryScale,
+  TimeScale,
   Tooltip,
   Legend
 );
@@ -50,6 +57,7 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
     total: 0,
   });
   const [currencyUnit, setCurrencyUnit] = useState(true); // Keep Track of which Currency Unit to Show Sats or BTC
+  const [records, setRecords] = useState([]);
 
   let unisat = (window as any).unisat;
 
@@ -91,7 +99,7 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
 
     // Change Between Balances (Sats or BTC) Every 12 Seconds
     const intervalId = setInterval(() => {
-       setCurrencyUnit((prevCurrencyUnit) => !prevCurrencyUnit);
+      setCurrencyUnit((prevCurrencyUnit) => !prevCurrencyUnit);
     }, 12000);
 
     // set the holdings
@@ -102,6 +110,11 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
     // Set the orders
     userService.getOrders(address).then((data) => {
       setOrders(data);
+    });
+
+    // Set the historical records
+    userService.getRecords(address).then((data) => {
+      setRecords(data);
     });
 
     // Clean Up Interval
@@ -133,7 +146,7 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
   };
 
   return (
-    <div style={{ maxHeight: "80vh", overflowY: "scroll", paddingBottom: 200 }}>
+    <div style={{ maxHeight: "80vh", overflowY: "scroll", paddingBottom: 200, paddingLeft: 25, paddingRight: 25 }}>
       {/* ------------------------------ 1st Row ------------------------------ */}
       <Row gutter={16}>
         <Col className="gutter-row" span={6}>
@@ -178,9 +191,13 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
                   </Space>
                 </Flex>
               </Card>
+              <div style={style}>
+                <Records records={records} />
+              </div>
             </div>
           </Space>
         </Col>
+        
 
         {/* -------------------- Tokens -------------------- */}
         <Col className="gutter-row" span={6}>
@@ -217,28 +234,11 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
 
       {/* ------------------------------ 2nd Row ------------------------------ */}
       <Row gutter={16}>
-        <Col className="gutter-row" span={6}>
-          <Space direction="vertical" size="middle" style={{ display: "flex" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                paddingLeft: "130px",
-              }}
-            >
-              {" "}
-              <h1
-                style={{
-                  textOrientation: "upright",
-                  writingMode: "vertical-rl",
-                  alignItems: "center",
-                  color: "#5D647B",
-                }}
-              >
-                {/* CHARTS */}
-              </h1>
-            </div>
-          </Space>
+        {/* -------------------- Bubble Chart -------------------- */}
+        <Col className="gutter-row" span={6} style={{ alignItems: "baseline" }}>
+          <div style={{ margin: "20px auto", maxWidth: "600px" }}>
+            <BubbleChart records={records} />
+          </div>
         </Col>
 
         {/* -------------------- Doughnut Chart -------------------- */}
@@ -281,5 +281,4 @@ Space - https://ant.design/components/space
 Flex - https://ant.design/components/flex
 Card - https://ant.design/components/card
 arc - https://stackoverflow.com/questions/70098392/react-chartjs-2-with-chartjs-3-error-arc-is-not-a-registered-element
-bar graph - https://wanuja18.medium.com/here-are-some-errors-which-i-faced-while-implementing-bar-chart-and-doughnut-chart-8d2cb639b632
 */

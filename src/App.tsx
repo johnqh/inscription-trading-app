@@ -15,7 +15,6 @@ import {
 } from "@ant-design/icons";
 
 import { Layout, Flex, Button, Menu, MenuProps } from "antd";
-import NftHoldings from "./components/NftHoldings";
 
 const { Header, Footer, Sider, Content } = Layout;
 
@@ -96,7 +95,7 @@ function App() {
   };
 
   const componentsSwitch = (key: string) => {
-    console.log(key);
+    // console.log(key);
     switch (key) {
       case "home":
         return <Home setMenuItem={setMenuItem}></Home>;

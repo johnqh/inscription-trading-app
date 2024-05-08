@@ -1,5 +1,4 @@
 import { FrownOutlined } from "@ant-design/icons";
-import { ConfigProvider } from "antd";
 import { useEffect, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
 
@@ -10,7 +9,11 @@ export type Holding = {
   updated_at_block: number;
 };
 
-function DoughnutChart({ holdings }: { holdings: Holding[] }) {
+interface DoughnutProps {
+  holdings: Holding[];
+}
+
+function DoughnutChart({ holdings }: DoughnutProps) {
   const [totalTokens, setTotalTokens] = useState(0);
   const [tick, setTick] = useState<any[]>([]);
 
@@ -27,11 +30,9 @@ function DoughnutChart({ holdings }: { holdings: Holding[] }) {
 
     setTick(elements);
     setTotalTokens(tokens);
-    // console.log("----- TICK ARRAY -----");
-    // console.log(tick);
   }
 
-  // Prepare data for the doughnut chart
+  // Prepare Data for Doughnut Chart
   const doughnutData = {
     labels: tick.map((token) => token.tick),
     datasets: [
@@ -71,12 +72,11 @@ function DoughnutChart({ holdings }: { holdings: Holding[] }) {
           bottom: 30,
         },
         font: {
-          size: 16, // Specify the font size here
+          size: 16,
         },
       },
       legend: {
         display: true,
-        // position: "bottom", // Change the position of the legend if needed
       },
       hover: {
         mode: "index",
@@ -86,10 +86,6 @@ function DoughnutChart({ holdings }: { holdings: Holding[] }) {
 
   useEffect(() => {
     getSummary();
-    // console.log("----- HOLDINGS -----");
-    // console.log(holdings);
-    // console.log("----- TOTAL TOKENS -----");
-    // console.log(totalTokens);
   }, [holdings]);
 
   return (
@@ -102,7 +98,14 @@ function DoughnutChart({ holdings }: { holdings: Holding[] }) {
           <p style={{ color: "#bfbfbf" }}>No tokens to chart</p>
         </div>
       ) : (
-        <Doughnut data={doughnutData} options={doughnutOptions}></Doughnut>
+        <div
+          style={{ height: "350px", border: "1px solid rgb(217, 217, 217)" }}
+        >
+          <Doughnut
+            data={doughnutData}
+            options={doughnutOptions}
+          ></Doughnut>
+        </div>
       )}
     </>
   );

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { List, Card, ConfigProvider, Space } from "antd";
 import { FrownOutlined } from "@ant-design/icons";
 
@@ -25,26 +26,20 @@ interface OrdersProps {
 }
 
 function Orders({ orders, title }: OrdersProps) {
+  const [totalTokens, setTotalTokens] = useState(0);
+
   const headStyle = {
     backgroundColor: "#5D647B",
     color: "#f5f5f5",
   };
 
-  const totalBySide = (title: string) => {
-    if (title === "Spent") {
-      return orders
-        .filter((order) => order.side === 1)
-        .reduce((acc, order) => acc + order.price, 0);
-    } else if (title === "Profits") {
-      return orders
-        .filter((order) => order.side === 0)
-        .reduce((acc, order) => acc + order.price, 0);
-    } else {
-      return orders.length;
-    }
-  };
-
   console.log(orders);
+
+  useEffect(() => {
+    let tokens = 0;
+    orders.forEach((order) => (tokens += order.amt));
+    setTotalTokens(tokens);
+  }, [orders]);
 
   return (
     <div>
@@ -55,7 +50,7 @@ function Orders({ orders, title }: OrdersProps) {
           bordered={true}
           style={{}}
         >
-          {totalBySide(title)}
+          {totalTokens}
         </Card>
         <ConfigProvider renderEmpty={customizeRenderEmpty}>
           {title === "Buy" || title === "Sell" ? (

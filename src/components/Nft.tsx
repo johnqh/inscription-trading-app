@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Button, Card, Col, Row, Space } from "antd";
+import { Button, Card, Col, Row, Space, message } from "antd";
 import Meta from "antd/es/card/Meta";
 import btcLogo from "../images/btc-logo.png";
 import "../css/nft.css";
-import { FrownOutlined } from "@ant-design/icons";
+import { FrownOutlined, LoadingOutlined } from "@ant-design/icons";
 
 const contentPrefix = "https://static-testnet.unisat.io/content";
-// let inscriptionName = "ZORO";
-// let inscriptionPrice = 50023;
 
 const apiPrefix = "http://localhost:3000";
 
-const exchangeWallet = process.env.EXCHANGE_WALLET || "";
+const exchangeWallet = process.env.REACT_APP_EXCHANGE_WALLET || "";
+const apiKey = process.env.REACT_APP_GECKO || "";
 
-function Nft({address} : {address: string}) {
+interface NftProps {
+  address: string;
+}
+
+function Nft({ address }: NftProps) {
   const [inscriptions, setInscriptions] = useState<any[]>([]);
   const [convertBtcToUsd, setConvertBtcToUsd] = useState(0);
   const [totalNfts, setTotalNfts] = useState(0);
@@ -24,29 +27,26 @@ function Nft({address} : {address: string}) {
   /* ----------------------------------- Retrieve Info from Database ----------------------------------- */
   async function getNFTs() {
     try {
-      // Retreive User's Inscription from Database (UniSat API)
-      const response = await axios.get(
-        // apiPrefix + `/holdings/nft?address=${address}`
-        apiPrefix + `/nft_orders`
+      // Retreiving NFTs from Database
+      const response = await axios.get(apiPrefix + `/nft_orders`);
+
+      let availableNfts = response.data.filter(
+        (nft: any) => nft.buyer_address == null
       );
 
-      console.log("-----RESPONSE-----");
-      console.log(response.data);
-
-      // User's Inscriptions (Not including BRC-20)
-      setInscriptions(response.data);
-      setTotalNfts(response.data.data.length);
+      // App's Stock of NFTs
+      setInscriptions(availableNfts);
+      setTotalNfts(availableNfts.length);
     } catch (e) {
       console.log(e);
     }
   }
 
+  // Total NFT's in App's Marketplace
   function getMarketNftTotal() {
     let nfts = inscriptions.length;
     setTotalNfts(nfts);
   }
-
-  const apiKey = process.env.REACT_APP_GECKO || "";
 
   // BTC => USD Conversion Rate
   async function getBtcToUsdRate() {
@@ -76,88 +76,24 @@ function Nft({address} : {address: string}) {
     try {
       let txid = "";
 
-      console.log("----INSCRIPTION IN GET NFT -----");
-      console.log(inscription);
-
       txid = await unisat.sendBitcoin(exchangeWallet, inscription.price, {
         feeRate: 20,
       });
 
-      // Update NFT Order - Seller Populated Order when Listing NFT, So Only Need to Add Buyer's Address
+      // Update NFT Order - Seller Populated Order when Listing NFT, So Only Need to Add Buyer's Address & TXID
       await axios.put(`${apiPrefix}/nft_orders/${inscription.id}`, {
         buyer_address: address,
+        buyer_txid: txid,
       });
+      setInscriptions(inscriptions.filter((el) => el !== inscription));
     } catch (e: any) {
-      console.log(e);
+      if (e.code === 4001) {
+        message.error("Rejected the transaction");
+      } else {
+        message.error("Wallet not connected");
+      }
     }
   }
-
-  const tokenSymbol = "ordinals";
-  const coingeckoUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${tokenSymbol}&vs_currencies=usd`;
-
-  const fetchTokenPrice = async () => {
-    try {
-      const response = await axios.get(coingeckoUrl, {
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-      });
-
-      const price = response.data[tokenSymbol.toLowerCase()].usd;
-      console.log(`Current price of ${tokenSymbol}: $${price}`);
-    } catch (error) {
-      console.error("Error fetching token price:", error);
-    }
-  };
-
-  // const showMessageWithDelay = () => {
-  //   setTimeout(() => {
-  //     fetchTokenPrice();
-  //   }, 30000); // Delay of 2 seconds
-  // };
-
-  const getBrc20Tokens = async () => {
-    try {
-      const response = await axios.get("", {
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-      });
-      //   const brc20Tokens = response.data.filter((coin: { id: string, name: string, symbol: string, description: { en: string } }) => {
-      //   // Filter by tokens with "BRC-20" in their description (case-insensitive)
-      //   return coin.description.en.toLowerCase().includes('brc-20');
-      // });
-      const tokens = response.data;
-      // console.log(brc20Tokens);
-      console.log(tokens);
-    } catch (error) {
-      console.error("Error fetching BRC-20 tokens:", error);
-      return [];
-    }
-  };
-
-  // const showMessageWithDelay2 = () => {
-  //   setTimeout(() => {
-  //     getBrc20Tokens();
-  //   }, 60000); // Delay of 60 seconds
-  // };
-
-  const showMessageOfNoNfts = () => {
-    setTimeout(() => {
-      return (
-        <div style={{ textAlign: "center" }}>
-          <FrownOutlined
-            style={{ fontSize: 20, color: "#bfbfbf", paddingTop: 75 }}
-          />
-          <p style={{ color: "#bfbfbf" }}>
-            No NFTS available in the marketplace.
-          </p>
-        </div>
-      );
-    }, 2000); // Delay of 2 seconds
-  };
 
   const getRate = () => {
     setTimeout(() => {
@@ -165,24 +101,15 @@ function Nft({address} : {address: string}) {
     }, 1000);
   };
 
-  // Call fetchTokenPrice every 60 seconds
-  //  setInterval(fetchTokenPrice, 60000);
-
   // Makes Sure Updates Only Happen Once
   useEffect(() => {
     getNFTs();
     getRate();
-    // getMarketNftTotal();
-
-    // showMessageWithDelay();
-    // showMessageWithDelay2();
   }, []);
 
   useEffect(() => {
     if (inscriptions.length > 0) {
       getMarketNftTotal();
-      console.log("----- TOTAL NFTS IN MARKETPLACE -----");
-      console.log(totalNfts);
     }
   }, [inscriptions]);
 
@@ -226,7 +153,7 @@ function Nft({address} : {address: string}) {
             paddingTop: 50,
             paddingLeft: 100,
             overflowY: "scroll",
-            height: "calc(100vh - 200px)", // Set the height to fill the remaining viewport space
+            height: "calc(100vh - 200px)",
             paddingBottom: 100,
           }}
         >
@@ -239,7 +166,6 @@ function Nft({address} : {address: string}) {
                   style={{
                     width: "220px",
                     height: "356px",
-                    // backgroundColor: "#f5f5f5",
                     border: "1px solid #2b2a29",
                     marginBottom: 60,
                     padding: 0,
@@ -247,19 +173,14 @@ function Nft({address} : {address: string}) {
                     flexDirection: "column",
                     justifyContent: "center",
                     alignItems: "center",
-                    position: "relative", // Add this line
+                    position: "relative",
                   }}
                   className="card-no-padding"
                   cover={
                     <div
                       style={{
-                        // border: "1px solid grey",
-                        // borderRadius: "8px",
-                        // boxSizing: "border-box",
                         backgroundSize: "cover",
                         width: "100%",
-                        // height: "120px",
-                        // backgroundColor: "#5D647B",
                       }}
                     >
                       {" "}
@@ -367,12 +288,14 @@ function Nft({address} : {address: string}) {
                             {/* ---------- Bitcoin to USD Conversion Rate ---------- */}
                             <span>
                               $
-                              {convertBtcToUsd
-                                ? (
-                                    convertBtcToUsd *
-                                    (Number(inscription.price) / 100000000)
-                                  ).toFixed(2)
-                                : "Loading..."}
+                              {convertBtcToUsd ? (
+                                (
+                                  convertBtcToUsd *
+                                  (Number(inscription.price) / 100000000)
+                                ).toFixed(2)
+                              ) : (
+                                <LoadingOutlined />
+                              )}
                             </span>
                           </div>
                         </div>

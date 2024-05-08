@@ -47,29 +47,6 @@ function Wallet(props: { accounts: string[] }) {
 
   return (
     <>
-      {/* ------------------------------ Title Header ------------------------------ */}
-      {/* <div
-        style={{
-          textAlign: "left",
-          paddingLeft: 100,
-          paddingTop: 30,
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "50px",
-            lineHeight: "1.2",
-            fontWeight: "600",
-            color: "#5D647B",
-          }}
-        >
-          <span>My</span> Data
-        </h1>
-        <p style={{ paddingTop: 0, color: "#5D647B" }}>
-          Bitcoin Ordinal Inscriptions & Trading
-        </p>
-      </div> */}
-
       {/* ------------------------------ Wallet Address & Copy Button ------------------------------ */}
       <p style={{ textAlign: "left", paddingLeft: "25px" }}>
         {accountsAddress}{" "}
