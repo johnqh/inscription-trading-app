@@ -174,7 +174,7 @@ function Market({
       const response = await axios.get(
         `${apiPrefix}/orders?tick=${encodeURIComponent(processedTick)}`
       );
-      setTokenDetails(response.data);
+      setTokenDetails(response.data.filter((order: any) => !order.fulfilled));
     } catch (error: any) {
       console.error("Error fetching token details:", error);
       setTokenDetails([]);
