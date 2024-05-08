@@ -18,13 +18,14 @@ import {
 
 let apiPrefix = "http://localhost:3000";
 
-const apiKey = process.env.REACT_APP_API_KEY || "";
-const apiUrl =
-  "https://open-api-testnet.unisat.io/v1/indexer/brc20/list?start=0&limit=25";
-console.log("WALLET_PRIVATE_KEY:", process.env.REACT_APP_API_KEY);
+interface MarketProps {
+  address: string;
+  selectedToken: string;
+  setSelectedToken: (token: string) => void;
+}
 
-function Market({ address }: { address: string }) {
-  const [tokens, setTokens] = useState<any[]>([]);
+function Market({ address, selectedToken, setSelectedToken }: MarketProps) {
+  const [tokens, setTokens] = useState<string[]>([]);
   const [orderType, setOrderType] = useState("buy");
   const [selectedToken, setSelectedToken] = useState("");
   const [holdings, setHoldings] = useState<any[]>([]);
@@ -36,18 +37,13 @@ function Market({ address }: { address: string }) {
   let sellList: string[] = []; // Variable to store list of sellable tokens
 
   async function getTokens() {
-
     // only sell tokens that a user has
     if (orderType === "buy") {
       try {
         if (!responseData) { // Try to cache data fetched
-          const response = await axios.get(apiUrl, {
-            headers: {
-              accept: "application/json",
-              Authorization: `Bearer ${apiKey}`,
-            },
-          });
-          responseData = response.data.data.detail;
+          // Getting List of BRC-20 Tokens from Database (UniSat API)
+          const response = await axios.get(apiPrefix + "/deploy");
+          responseData = response.data;
         }
       } catch (error: any) {
           console.error("Error:", error.message);
@@ -84,16 +80,27 @@ function Market({ address }: { address: string }) {
     getTokens();
   }, [orderType, address, holdings]);
 
+  // Field Type's for Order Form
   type FieldType = {
     size?: number;
     price?: number;
     expiration?: number;
   };
 
+  // When a User Clicks Buy or Sell on Order Form
   const onFinish: FormProps<FieldType>["onFinish"] = async (values) => {
     try {
       let txid = "";
+
+      // Make Sure the User Selects a Specific Token to Buy or Sell
+      if (selectedToken === "") {
+        alert("Oops! You didn't select a token.");
+        return;
+      }
+
+      // Buyer Paying for BRC-20 Token
       if (orderType === "buy" && values.size && values.price) {
+        // Buyer Sends Payment (BTC) to the Exchange
         txid = await unisat.sendBitcoin(
           "tb1qeuzkvusgyxekclxwzjl49n9g30ankw60ly2l5m",
           values.size * values.price,
@@ -102,11 +109,14 @@ function Market({ address }: { address: string }) {
       } else if (orderType === "sell" && values.size && values.price) {
         console.log(selectedToken);
         console.log(values.size);
-        // Transfer Token
+
+        // Seller Inscribes Transfer (Pays UniSat for this Service)
         const inscription = await unisat.inscribeTransfer(
           selectedToken,
           String(values.size)
         );
+
+        // Seller Sends BRC-20 to the Exchange
         txid = await unisat.sendInscription(
           "tb1qeuzkvusgyxekclxwzjl49n9g30ankw60ly2l5m",
           inscription.inscriptionId,
@@ -114,6 +124,7 @@ function Market({ address }: { address: string }) {
         );
       }
 
+      // User's Address
       const addresses = await unisat.getAccounts();
       const address = addresses ? addresses[0] : null;
 
@@ -126,12 +137,14 @@ function Market({ address }: { address: string }) {
         expiration: values.expiration || null,
         expired: 0,
         txid: txid,
+        fulfilled: 0,
       };
 
       console.log(orderInfo);
 
       console.log("Success:", values);
 
+      // Create Order in the Database
       await axios.post(apiPrefix + "/orders", orderInfo);
     } catch (e: any) {
       console.log(e);
@@ -145,6 +158,7 @@ function Market({ address }: { address: string }) {
     console.log("Failed:", errorInfo);
   };
 
+  /* ------------------------- Mouse Events ------------------------- */
   const confirmBid = (e?: React.MouseEvent<HTMLElement>) => {
     console.log(e);
     message.success("Knock on wood! Your bid was added to the order book.");
@@ -188,7 +202,9 @@ function Market({ address }: { address: string }) {
   return (
     <>
       <Space direction="vertical" size="middle" style={{ display: "flex" }}>
-        <Row style={{ maxHeight: "600px", overflowY: "scroll" }}>
+        <Row
+          style={{ maxHeight: "600px", overflowY: "scroll", paddingTop: 50 }}
+        >
           {/* ------------------------- List of Tokens ------------------------- */}
           <Col span={8}>
             <List
@@ -259,7 +275,7 @@ function Market({ address }: { address: string }) {
                 label="Price"
                 name="price"
                 rules={[
-                  { required: false, message: "Please enter a limit price." },
+                  { required: true, message: "Please enter a limit price." },
                 ]}
               >
                 <Input />
@@ -327,7 +343,6 @@ function Market({ address }: { address: string }) {
                       type="primary"
                       htmlType="submit"
                       style={{ backgroundColor: "#5D647B" }}
-                      // onClick={sendBTC}
                     >
                       Buy
                     </Button>
@@ -345,7 +360,6 @@ function Market({ address }: { address: string }) {
                       type="primary"
                       htmlType="submit"
                       style={{ backgroundColor: "#5D647B" }}
-                      // onClick={sendBRC}
                     >
                       Sell
                     </Button>
@@ -369,6 +383,7 @@ List - https://ant.design/components/list
 Form - https://ant.design/components/form
 Button - https://ant.design/components/button
 Ponconfirm - https://ant.design/components/popconfirm
-UniSat - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet#sendbitcoin
+UniSat Wallet API - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet#sendbitcoin
 Overflow Scroll - https://developer.mozilla.org/en-US/docs/Web/CSS/overflow
+Props Interface - https://www.geeksforgeeks.org/react-js-blueprint-suggest-props-interface/#
 */

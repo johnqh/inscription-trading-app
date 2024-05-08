@@ -6,7 +6,14 @@ import Records from './Records';
 import btcLogo from "../images/btc-logo.png";
 import { Row, Col, Card, Flex, Space } from "antd";
 
-function User({ address }: { address: string }) {
+interface UserProps {
+  address: string;
+  // These Props Below are Needed for Holdings
+  setMenuItem: (item: string) => void; // Allows setting up where a button or a hyperlink can link.
+  setSelectedToken: (token: string) => void; // Want to link to the market of the selected token the user selects.
+}
+
+function User({ address, setMenuItem, setSelectedToken }: UserProps) {
   const [holdings, setHoldings] = useState([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [records, setRecords] = useState([]);
@@ -15,9 +22,10 @@ function User({ address }: { address: string }) {
     unconfirmed: 0,
     total: 0,
   });
-  const [isTotal, setIsTotal] = useState(true); // Keep Trackk which Balance to Show Sats or BTC
+  const [currencyUnit, setCurrencyUnit] = useState(true); // Keep Track of which Currency Unit to Show Sats or BTC
 
   let unisat = (window as any).unisat;
+
   const getAddress = async () => {
     if (!address && unisat) {
       let x = await unisat.getAccounts();
@@ -54,9 +62,9 @@ function User({ address }: { address: string }) {
 
     getAccountBalance();
 
-    // Change Between Balances (Sats or BTC) Every 5 Seconds
+    // Change Between Balances (Sats or BTC) Every 12 Seconds
     const intervalId = setInterval(() => {
-      setIsTotal((prevIsTotal) => !prevIsTotal);
+      setCurrencyUnit((prevCurrencyUnit) => !prevCurrencyUnit);
     }, 12000);
 
     // set the holdings
@@ -117,7 +125,7 @@ function User({ address }: { address: string }) {
                     ></img>
                     <div>
                       <span>
-                        {isTotal
+                        {currencyUnit
                           ? balance.total
                           : (balance.total / 100000000).toFixed(8)}
                       </span>
@@ -130,7 +138,7 @@ function User({ address }: { address: string }) {
                           marginTop: "13px",
                         }}
                       >
-                        {isTotal ? "sats" : "BTC"}
+                        {currencyUnit ? "sats" : "BTC"}
                       </span>
                     </div>
                   </Space>
@@ -142,7 +150,11 @@ function User({ address }: { address: string }) {
 
         <Col className="gutter-row" span={6}>
           <div style={style}>
-            <Holdings holdings={holdings} />
+            <Holdings
+              holdings={holdings}
+              setMenuItem={setMenuItem}
+              setSelectedToken={setSelectedToken}
+            />
           </div>
         </Col>
         <Col className="gutter-row" span={6}>
@@ -176,8 +188,9 @@ export default User;
 
 /*
 -------------------- References --------------------
-Grid - https://ant.design/components/grid
+Grid (Row, Col) - https://ant.design/components/grid
 Space - https://ant.design/components/space
 Flex - https://ant.design/components/flex
 Card - https://ant.design/components/card
+Props Interface - https://www.geeksforgeeks.org/react-js-blueprint-suggest-props-interface/#
 */
