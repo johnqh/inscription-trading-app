@@ -1,19 +1,56 @@
 import { useEffect, useState } from "react";
+import { Row, Col, Card, Flex, Space } from "antd";
 import userService from "../services/user";
+import Records from "./Records";
 import Holdings from "./Holdings";
 import Orders from "./Orders";
 import Records from './Records';
 import btcLogo from "../images/btc-logo.png";
-import { Row, Col, Card, Flex, Space } from "antd";
+import NftHoldings from "./NftHoldings";
+import BubbleChart from "./BubbleChart";
+import DoughnutChart from "./DoughnutChart";
+import BarChart from "./BarChart";
+import LineChart from "./LineChart";
+
+import {
+  Chart,
+  ArcElement,
+  LineElement,
+  PointElement,
+  LinearScale,
+  BubbleController,
+  Title,
+  CategoryScale,
+  TimeScale,
+  BarElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+Chart.register(ArcElement);
+Chart.register(
+  BarElement,
+  LineElement,
+  PointElement,
+  LinearScale,
+  BubbleController,
+  Title,
+  CategoryScale,
+  TimeScale,
+  Tooltip,
+  Legend
+);
 
 interface UserProps {
   address: string;
   // These Props Below are Needed for Holdings
   setMenuItem: (item: string) => void; // Allows setting up where a button or a hyperlink can link.
   setSelectedToken: (token: string) => void; // Want to link to the market of the selected token the user selects.
+  setOrderType: (token: string) => void;
 }
 
-function User({ address, setMenuItem, setSelectedToken }: UserProps) {
+function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProps) {
+
   const [holdings, setHoldings] = useState([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [records, setRecords] = useState([]);
@@ -23,6 +60,7 @@ function User({ address, setMenuItem, setSelectedToken }: UserProps) {
     total: 0,
   });
   const [currencyUnit, setCurrencyUnit] = useState(true); // Keep Track of which Currency Unit to Show Sats or BTC
+  const [records, setRecords] = useState([]);
 
   let unisat = (window as any).unisat;
 
@@ -78,7 +116,7 @@ function User({ address, setMenuItem, setSelectedToken }: UserProps) {
     });
 
     // Set the historical records
-    userService.getRecords(address).then(data => {
+    userService.getRecords(address).then((data) => {
       setRecords(data);
     });
 
@@ -93,6 +131,16 @@ function User({ address, setMenuItem, setSelectedToken }: UserProps) {
   const style: React.CSSProperties = {
     background: "fff",
     padding: "8px 0",
+    height: "500px",
+  };
+
+  const contentStyle: React.CSSProperties = {
+    margin: 0,
+    height: "160px",
+    color: "#fff",
+    lineHeight: "160px",
+    textAlign: "center",
+    background: "#364d79",
   };
 
   const headStyle = {
@@ -101,11 +149,13 @@ function User({ address, setMenuItem, setSelectedToken }: UserProps) {
   };
 
   return (
-    <div>
+    <div style={{ maxHeight: "80vh", overflowY: "scroll", paddingBottom: 200, paddingLeft: 25, paddingRight: 25 }}>
+      {/* ------------------------------ 1st Row ------------------------------ */}
       <Row gutter={16}>
         <Col className="gutter-row" span={6}>
           <Space direction="vertical" size="middle" style={{ display: "flex" }}>
             <div style={style}>
+              {/* -------------------- Balance -------------------- */}
               <Card
                 title="Balance"
                 styles={{ header: headStyle }}
@@ -144,19 +194,27 @@ function User({ address, setMenuItem, setSelectedToken }: UserProps) {
                   </Space>
                 </Flex>
               </Card>
+              <div style={style}>
+                <Records records={records} />
+              </div>
             </div>
           </Space>
         </Col>
+        
 
+        {/* -------------------- Tokens -------------------- */}
         <Col className="gutter-row" span={6}>
           <div style={style}>
             <Holdings
               holdings={holdings}
               setMenuItem={setMenuItem}
               setSelectedToken={setSelectedToken}
+              setOrderType={setOrderType}
             />
           </div>
         </Col>
+
+        {/* -------------------- Buys -------------------- */}
         <Col className="gutter-row" span={6}>
           <div style={style}>
             <Orders
@@ -166,6 +224,7 @@ function User({ address, setMenuItem, setSelectedToken }: UserProps) {
           </div>
         </Col>
 
+        {/* -------------------- Sells -------------------- */}
         <Col className="gutter-row" span={6}>
           <div style={style}>
             <Orders
@@ -180,6 +239,43 @@ function User({ address, setMenuItem, setSelectedToken }: UserProps) {
           </div>
         </Col>
       </Row>
+
+      {/* ------------------------------ 2nd Row ------------------------------ */}
+      <Row gutter={16}>
+        {/* -------------------- Bubble Chart -------------------- */}
+        <Col className="gutter-row" span={6} style={{ alignItems: "baseline" }}>
+          <div style={{ margin: "20px auto", maxWidth: "600px" }}>
+            <BubbleChart records={records} />
+          </div>
+        </Col>
+
+        {/* -------------------- Doughnut Chart -------------------- */}
+        <Col className="gutter-row" span={6} style={{ alignItems: "baseline" }}>
+          <div style={{ margin: "20px auto", maxWidth: "600px" }}>
+            <DoughnutChart holdings={holdings} />
+          </div>
+        </Col>
+
+        {/* -------------------- Bar Chart -------------------- */}
+        <Col className="gutter-row" span={6}>
+          <div style={{ margin: "20px auto" }}>
+            <BarChart orders={orders.filter((order) => order.side === 1)} />
+          </div>
+        </Col>
+
+        {/* -------------------- Line Chart -------------------- */}
+        <Col className="gutter-row" span={6}>
+          <div style={{ margin: "20px auto", maxWidth: "600px" }}>
+            <LineChart orders={orders.filter((order) => order.side === 0)} />
+          </div>
+        </Col>
+      </Row>
+
+      {/* ------------------------------ 3rd Row ------------------------------ */}
+      {/* -------------------- NFTs -------------------- */}
+      <div>
+        <NftHoldings address={address}></NftHoldings>
+      </div>
     </div>
   );
 }
@@ -192,5 +288,6 @@ Grid (Row, Col) - https://ant.design/components/grid
 Space - https://ant.design/components/space
 Flex - https://ant.design/components/flex
 Card - https://ant.design/components/card
+arc - https://stackoverflow.com/questions/70098392/react-chartjs-2-with-chartjs-3-error-arc-is-not-a-registered-element
 Props Interface - https://www.geeksforgeeks.org/react-js-blueprint-suggest-props-interface/#
 */
