@@ -151,7 +151,7 @@ function NftHoldings({ address }: NftHoldingsProps) {
             slidesToShow={5}
             slidesToScroll={5}
             dots={true}
-            infinite={true}
+            infinite={totalNfts >= 5}
             style={{
               margin: 0,
               height: "400px",

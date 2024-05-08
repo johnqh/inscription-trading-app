@@ -4,7 +4,6 @@ import userService from "../services/user";
 import Records from "./Records";
 import Holdings from "./Holdings";
 import Orders from "./Orders";
-import Records from './Records';
 import btcLogo from "../images/btc-logo.png";
 import NftHoldings from "./NftHoldings";
 import BubbleChart from "./BubbleChart";
@@ -49,8 +48,12 @@ interface UserProps {
   setOrderType: (token: string) => void;
 }
 
-function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProps) {
-
+function User({
+  address,
+  setMenuItem,
+  setSelectedToken,
+  setOrderType,
+}: UserProps) {
   const [holdings, setHoldings] = useState([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [records, setRecords] = useState([]);
@@ -60,7 +63,6 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
     total: 0,
   });
   const [currencyUnit, setCurrencyUnit] = useState(true); // Keep Track of which Currency Unit to Show Sats or BTC
-  const [records, setRecords] = useState([]);
 
   let unisat = (window as any).unisat;
 
@@ -149,7 +151,15 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
   };
 
   return (
-    <div style={{ maxHeight: "80vh", overflowY: "scroll", paddingBottom: 200, paddingLeft: 25, paddingRight: 25 }}>
+    <div
+      style={{
+        maxHeight: "80vh",
+        overflowY: "scroll",
+        paddingBottom: 200,
+        paddingLeft: 25,
+        paddingRight: 25,
+      }}
+    >
       {/* ------------------------------ 1st Row ------------------------------ */}
       <Row gutter={16}>
         <Col className="gutter-row" span={6}>
@@ -200,7 +210,6 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
             </div>
           </Space>
         </Col>
-        
 
         {/* -------------------- Tokens -------------------- */}
         <Col className="gutter-row" span={6}>
@@ -231,11 +240,6 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
               orders={orders.filter((order) => order.side === 0)}
               title="Sell"
             />
-          </div>
-        </Col>
-        <Col className="gutter-row" span={6}>
-          <div style={style}>
-            <Records records={records} />
           </div>
         </Col>
       </Row>

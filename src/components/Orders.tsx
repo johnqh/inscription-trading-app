@@ -34,7 +34,6 @@ function Orders({ orders, title }: OrdersProps) {
   };
 
   console.log(orders);
-  const [totalTokens, setTotalTokens] = useState(0);
 
   useEffect(() => {
     let tokens = 0;

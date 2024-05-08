@@ -23,6 +23,10 @@ function DoughnutChart({ holdings }: DoughnutProps) {
     let tokens = 0;
 
     for (let token of holdings) {
+      // If 0, Don't Include Token in User's BRC-20 Portfolio
+      if (token.amt === 0) {
+        continue;
+      }
       console.log(token);
       elements.push(token);
       tokens += token.amt;

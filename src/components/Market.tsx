@@ -66,6 +66,7 @@ function Market({
   const [orderPrice, setOrderPrice] = useState(0);
   const [formValid, setFormValid] = useState(false);
   const [dispText, setDispText] = useState("");
+  const [currencyUnit, setCurrencyUnit] = useState("sats");
 
   const [form] = Form.useForm();
 
@@ -282,7 +283,17 @@ function Market({
 
   // Currency Units (Price): Order Form
   const selectAfter = (
-    <Select defaultValue="sats" style={{ width: 80 }}>
+    <Select
+      onChange={(value) => {
+        form.setFieldValue(
+          "price",
+          value === "sats" ? orderPrice : orderPrice / 100000000
+        );
+        setCurrencyUnit(value);
+      }}
+      defaultValue="sats"
+      style={{ width: 80 }}
+    >
       <Option value="sats">sats</Option>
       <Option value="btc">BTC</Option>
     </Select>
@@ -296,26 +307,6 @@ function Market({
   };
 
   /* ------------------------- Mouse Events ------------------------- */
-  const confirmBid = (e?: React.MouseEvent<HTMLElement>) => {
-    console.log(e);
-    message.success("Knock on wood! Your bid was added to the order book.");
-  };
-
-  const cancelBid = (e?: React.MouseEvent<HTMLElement>) => {
-    console.log(e);
-    message.error("Aw-shucks! Your bid was not added to the order book.");
-  };
-
-  const confirmAsk = (e?: React.MouseEvent<HTMLElement>) => {
-    console.log(e);
-    message.success("Knock on wood! Your ask was added to the order book.");
-  };
-
-  const cancelAsk = (e?: React.MouseEvent<HTMLElement>) => {
-    console.log(e);
-    message.error("Aw-shucks! Your ask was not added to the order book.");
-  };
-
   const confirmBuy = (e?: React.MouseEvent<HTMLElement>) => {
     console.log(e);
     message.success("Kudos! Tokens were added to your wallet.");
@@ -525,10 +516,16 @@ function Market({
                   ]}
                 >
                   <InputNumber
-                    min={1}
+                    min={currencyUnit === "sats" ? 1 : 0.00000001}
                     addonAfter={selectAfter}
                     onChange={(price) => {
-                      setOrderPrice(price || 0);
+                      setOrderPrice(
+                        !price
+                          ? 0
+                          : currencyUnit === "sats"
+                          ? price
+                          : price * 100000000
+                      );
                     }}
                   />
                 </Form.Item>
@@ -551,40 +548,7 @@ function Market({
                   />
                 </Form.Item>
 
-                {/* ---------- Bid or Ask Buttons ---------- */}
                 <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-                  {orderType === "buy" ? (
-                    <Popconfirm
-                      title="Place bid"
-                      description="Are you sure you want to place a bid?"
-                      okText="Yes"
-                      cancelText="No"
-                    >
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        style={{ backgroundColor: "#5D647B" }}
-                      >
-                        Bid
-                      </Button>
-                    </Popconfirm>
-                  ) : (
-                    <Popconfirm
-                      title="Place ask"
-                      description="Are you sure you want to place an ask?"
-                      okText="Yes"
-                      cancelText="No"
-                    >
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        style={{ backgroundColor: "#5D647B" }}
-                      >
-                        Ask
-                      </Button>
-                    </Popconfirm>
-                  )}
-
                   {/* ---------- Buy or Sell Buttons ---------- */}
                   {orderType === "buy" ? (
                     <Popconfirm
@@ -625,6 +589,7 @@ function Market({
                         onClick={() => {
                           setFormValid(form.getFieldValue("size") != null);
                         }}
+                        disabled={orderPrice || buySpotPrice ? false : true}
                       >
                         Buy
                       </Button>
@@ -668,6 +633,7 @@ function Market({
                         onClick={() => {
                           setFormValid(form.getFieldValue("size") != null);
                         }}
+                        disabled={orderPrice || sellSpotPrice ? false : true}
                       >
                         Sell
                       </Button>
