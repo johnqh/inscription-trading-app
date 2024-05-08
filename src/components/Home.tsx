@@ -58,7 +58,6 @@ function Home({ setMenuItem }: HomeProps) {
             >
               Trade Now
             </Button>
-
             <div
               style={{
                 color: "#5D647B",

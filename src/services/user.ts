@@ -32,6 +32,6 @@ const getRecords = async (address: string) => {
     API + `/historical_records?address=${address}`
   );
   return request.data;
-}
+};
 
 export default { getHoldings, getOrders, getRecords };

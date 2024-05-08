@@ -1,0 +1,17 @@
+.card-no-padding .ant-card-body {
+  padding: 0 !important;
+}
+
+.test .ant-card-body{
+  text-align: left !important;
+  color: red !important;
+}
+
+.titleLeftAlign .ant-card-body{
+    text-align: left !important;
+    color: red;
+}
+
+.titleNumber {
+    text-align: right;
+}

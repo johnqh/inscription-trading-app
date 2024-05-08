@@ -6,15 +6,6 @@ let unisat = (window as any).unisat;
 
 function Wallet(props: { accounts: string[] }) {
   const [accountsAddress, setAccountsAddress] = useState<string[]>([]);
-  const [balance, setBalance] = useState({
-    confirmed: 0,
-    unconfirmed: 0,
-    total: 0,
-  });
-  const [inscriptions, setInscriptions] = useState({
-    list: Array(0),
-    total: 0,
-  });
   const [address, setAddress] = useState<string[]>([]);
   const [showWallet, setShowWallet] = useState("hide");
 
@@ -40,10 +31,8 @@ function Wallet(props: { accounts: string[] }) {
     try {
       console.log("UniSat Wallet is installed!");
 
-      // Get User's Account Info
+      // Get User's Account
       setAccountsAddress(await getAccountAddress());
-      setBalance(await getAccountBalance());
-      setInscriptions(await getAccountsInscriptions());
       setAddress(await getAddress());
       setShowWallet("show");
     } catch (e) {
@@ -59,6 +48,8 @@ function Wallet(props: { accounts: string[] }) {
 
   return (
     <>
+      {/* ------------------------------ Wallet Address & Copy Button ------------------------------ */}
+
       <p style={{ textAlign: "left", paddingLeft: "25px" }}>
         {accountsAddress}{" "}
         <Button
@@ -106,33 +97,6 @@ async function getAccountAddress() {
     return hiddenAddresses;
   } catch (e) {
     console.log("error in getting account info");
-  }
-}
-
-// Get User's Account Balance
-async function getAccountBalance() {
-  try {
-    const balance = await unisat.getBalance();
-    console.log("BALANCE: ", balance);
-    return balance;
-  } catch (e) {
-    console.log(e);
-  }
-}
-
-// Get User's List of Inscriptions
-async function getAccountsInscriptions() {
-  try {
-    const inscriptions = await unisat.getInscriptions();
-    console.log("INSCRIPTIONS: ", inscriptions);
-
-    if (inscriptions.list.length === 0) {
-      console.log("YOU HAVE NO INSCRIPTIONS");
-    }
-
-    return inscriptions;
-  } catch (e) {
-    console.log(e);
   }
 }
 

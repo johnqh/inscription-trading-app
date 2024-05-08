@@ -3,12 +3,17 @@ import { isMobile } from "react-device-detect";
 import "./App.css";
 import Wallet from "./components/Wallet";
 import Market from "./components/Market";
+import Nft from "./components/Nft";
 import User from "./components/User";
 import logo from "./images/Zorro Cat Logo.png";
 import MarketIcon from "./components/MarketIcon";
 import Home from "./components/Home";
 
-import { UserOutlined, SettingOutlined } from "@ant-design/icons";
+import {
+  UserOutlined,
+  SettingOutlined,
+  TrademarkOutlined,
+} from "@ant-design/icons";
 
 import { Layout, Flex, Button, Menu, MenuProps } from "antd";
 
@@ -75,6 +80,7 @@ function getItem(
 const items: MenuItem[] = [
   getItem(<UserOutlined />, "account"),
   getItem(<MarketIcon />, "market"),
+  getItem(<TrademarkOutlined />, "nft"),
 ];
 
 const settingsItems: MenuItem[] = [getItem(<SettingOutlined />, "settings")];
@@ -83,7 +89,7 @@ function App() {
   let [accounts, setAccounts] = useState<string[]>([]);
   const [selectedMenuItem, setSelectedMenuItem] = useState("home");
   const [selectedToken, setSelectedToken] = useState(""); // Initially defined in the Market component, we now need to define it here to have tokens on the account page that can link to that specific token's market page.
-
+  const [orderType, setOrderType] = useState("buy");
   const setMenuItem = (item: string) => {
     setSelectedMenuItem(item);
   };
@@ -100,6 +106,7 @@ function App() {
               address={accounts[0]}
               setMenuItem={setMenuItem}
               setSelectedToken={setSelectedToken}
+              setOrderType={setOrderType}
             ></User>
           </>
         );
@@ -109,8 +116,12 @@ function App() {
             address={accounts[0]}
             selectedToken={selectedToken}
             setSelectedToken={setSelectedToken}
+            orderType={orderType}
+            setOrderType={setOrderType}
           ></Market>
         );
+      case "nft":
+        return <Nft address={accounts[0]}></Nft>;
       default:
         break;
     }
@@ -166,7 +177,11 @@ function App() {
       </Sider>
       <Layout>
         <Header style={headerStyle}>
-          <Flex style={{ height: "100%" }} justify="flex-end" align="center">
+          <Flex
+            style={{ height: "100%", paddingTop: 20 }}
+            justify="flex-end"
+            align="center"
+          >
             <Button
               type="primary"
               style={{ backgroundColor: "#5D647B" }}

@@ -26,6 +26,8 @@ interface OrdersProps {
 }
 
 function Orders({ orders, title }: OrdersProps) {
+  const [totalTokens, setTotalTokens] = useState(0);
+
   const headStyle = {
     backgroundColor: "#5D647B",
     color: "#f5f5f5",
@@ -41,6 +43,12 @@ function Orders({ orders, title }: OrdersProps) {
   }, [orders]);
 
 
+  useEffect(() => {
+    let tokens = 0;
+    orders.forEach((order) => (tokens += order.amt));
+    setTotalTokens(tokens);
+  }, [orders]);
+
   return (
     <div>
       <Space direction="vertical" size="middle" style={{ display: "flex" }}>
@@ -53,23 +61,28 @@ function Orders({ orders, title }: OrdersProps) {
           {totalTokens}
         </Card>
         <ConfigProvider renderEmpty={customizeRenderEmpty}>
-          <List
-            bordered
-            dataSource={orders}
-            renderItem={(order) => {
-              let dateExp = new Date(order.expiration);
-              const expString = order.expired
-                ? "Expired"
-                : `Expires on ${dateExp.toLocaleString()}`;
-              return (
-                <List.Item>
-                  {order.tick}: {order.amt} at {order.price}{" "}
-                  <em>{expString}</em>
-                </List.Item>
-              );
-            }}
-            locale={{ emptyText: "" }}
-          />
+          {title === "Buy" || title === "Sell" ? (
+            <List
+              bordered
+              style={{ maxHeight: "300px", overflowY: "scroll" }}
+              dataSource={orders}
+              renderItem={(order) => {
+                let dateExp = new Date(order.expiration);
+                const expString = order.expired
+                  ? "Expired"
+                  : `Expires on ${dateExp.toLocaleString()}`;
+                return (
+                  <List.Item>
+                    {order.tick}: {order.amt} at {order.price}{" "}
+                    <em>{expString}</em>
+                  </List.Item>
+                );
+              }}
+              locale={{ emptyText: "" }}
+            />
+          ) : (
+            <div></div>
+          )}
         </ConfigProvider>
       </Space>
     </div>
