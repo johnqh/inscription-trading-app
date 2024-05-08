@@ -12,8 +12,10 @@ A `.env` file will need to be made in order to store secrets, or else the API ca
 
 ```
 DATABASE_URL=<url to mysql database>
-API_KEY=<unisat api key>
-EXCHANGE_WALLET=<exchange wallet for holding assets before order fulfillment>
+REACT_APP_API_KEY=<unisat api key>
+REACT_APP_EXCHANGE_WALLET=<exchange wallet for holding assets before order fulfillment>
+REACT_APP_GECKO=<coin gecko api key>
+
 ```
 
 1. Start the API: Before starting the frontend, ensure that the [API](https://github.com/johnqh/inscription-trading-api) is running:
