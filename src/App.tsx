@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { isMobile } from "react-device-detect";
 import "./App.css";
 import Wallet from "./components/Wallet";
 import Market from "./components/Market";
@@ -138,6 +139,14 @@ function App() {
     } catch (e) {
       console.log("connect failed");
     }
+  }
+
+  if (isMobile) {
+    return (<div className="mobile">
+      A mobile version is coming soon.
+      <br />
+      Use desktop version.
+    </div>);
   }
 
   return (
