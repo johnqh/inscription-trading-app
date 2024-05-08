@@ -16,26 +16,16 @@ API_KEY=<unisat api key>
 EXCHANGE_WALLET=<exchange wallet for holding assets before order fulfillment>
 ```
 
-1. Start the API:
-2. Before starting the frontend, ensure that the API is running:
-   ```bash
-   npm run start
-   ```
-   This will start the API on port 3000 by default.
-3. Run Order Matching:
-4. Optionally, to handle order matching, execute:
-   ```bash
-   ts-node order_matching.ts
-   ```
-   It is recommended to automate this process with a cron job or similar scheduler.
-5. Start the Frontend Application:
-6. Once the API is up and running, you can start the frontend application:
+1. Start the API: Before starting the frontend, ensure that the [API](https://github.com/johnqh/inscription-trading-api) is running:
    ```bash
    npm start
    ```
-   Visit http://localhost:3000 in your browser to view the application.
-
-To run order matching, run `ts-node order_matching.ts`. It is recommended to run it with a cronjob or some other periodic scheduler.
+   This will start the API on port 3000 by default.
+2. Start the Frontend Application: Once the API is up and running, you can start the frontend application:
+   ```bash
+   npm start
+   ```
+   Visit http://localhost:3001 in your browser to view the application.
 
 ## Components and Features
 * Dashboard (Home.tsx): Provides a snapshot of the market and active orders.
@@ -45,10 +35,3 @@ To run order matching, run `ts-node order_matching.ts`. It is recommended to run
 * User Management (User.tsx): Handles user account settings and preferences.
 * Wallet Integration (Wallet.tsx): Connects users' blockchain wallets for transaction execution.
 * Asset Holdings (Holdings.tsx): Displays users' current asset holdings.
-
-## Routes
-* /: Main dashboard for market overview.
-* /orders: Page for managing orders.
-* /history: Transaction history display.
-* /wallet: Wallet connection and management page.
-* /holdings: View of user's asset holdings.
