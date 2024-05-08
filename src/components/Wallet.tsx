@@ -40,6 +40,7 @@ function Wallet(props: { accounts: string[] }) {
     }
   }
 
+  // Gives the User the Ability to Copy their own Address
   function copyAddress() {
     navigator.clipboard.writeText(address[0]);
     message.success("Copied");
@@ -48,6 +49,7 @@ function Wallet(props: { accounts: string[] }) {
   return (
     <>
       {/* ------------------------------ Wallet Address & Copy Button ------------------------------ */}
+
       <p style={{ textAlign: "left", paddingLeft: "25px" }}>
         {accountsAddress}{" "}
         <Button
@@ -104,5 +106,7 @@ export default Wallet;
 -------------------- References --------------------
 Window Compatible with TypeScript - https://stackoverflow.com/questions/56457935/typescript-error-property-x-does-not-exist-on-type-window
 UniSat Wallet API - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet
+Icon - https://ant.design/components/icon
 Message - https://ant.design/components/message
+Button - https://ant.design/components/button
 */

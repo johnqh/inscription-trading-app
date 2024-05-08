@@ -34,6 +34,14 @@ function Orders({ orders, title }: OrdersProps) {
   };
 
   console.log(orders);
+  const [totalTokens, setTotalTokens] = useState(0);
+
+  useEffect(() => {
+    let tokens = 0;
+    orders.forEach((order) => tokens += order.amt);
+    setTotalTokens(tokens);
+  }, [orders]);
+
 
   useEffect(() => {
     let tokens = 0;
@@ -82,3 +90,11 @@ function Orders({ orders, title }: OrdersProps) {
 }
 
 export default Orders;
+
+/*
+-------------------- References -------------------- 
+List - https://ant.design/components/list
+Card - https://ant.design/components/card
+Space - https://ant.design/components/space
+CustomizeRenderEmpty() - https://ant.design/components/empty
+*/

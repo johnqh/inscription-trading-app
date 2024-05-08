@@ -1,4 +1,3 @@
-import React from "react";
 import Icon from "@ant-design/icons";
 
 const MarketIcon = (props: any) => {
@@ -27,3 +26,9 @@ const MarketIcon = (props: any) => {
 };
 
 export default MarketIcon;
+
+/*
+-------------------- References --------------------
+Custom Icon - https://ant.design/components/icon
+Iconify - https://iconify.design/docs/
+*/

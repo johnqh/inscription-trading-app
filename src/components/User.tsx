@@ -4,6 +4,7 @@ import userService from "../services/user";
 import Records from "./Records";
 import Holdings from "./Holdings";
 import Orders from "./Orders";
+import Records from './Records';
 import btcLogo from "../images/btc-logo.png";
 import NftHoldings from "./NftHoldings";
 import BubbleChart from "./BubbleChart";
@@ -49,8 +50,10 @@ interface UserProps {
 }
 
 function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProps) {
+
   const [holdings, setHoldings] = useState([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [records, setRecords] = useState([]);
   const [balance, setBalance] = useState({
     confirmed: 0,
     unconfirmed: 0,
@@ -230,6 +233,11 @@ function User({ address, setMenuItem, setSelectedToken, setOrderType }: UserProp
             />
           </div>
         </Col>
+        <Col className="gutter-row" span={6}>
+          <div style={style}>
+            <Records records={records} />
+          </div>
+        </Col>
       </Row>
 
       {/* ------------------------------ 2nd Row ------------------------------ */}
@@ -276,9 +284,10 @@ export default User;
 
 /*
 -------------------- References --------------------
-Grid - https://ant.design/components/grid
+Grid (Row, Col) - https://ant.design/components/grid
 Space - https://ant.design/components/space
 Flex - https://ant.design/components/flex
 Card - https://ant.design/components/card
 arc - https://stackoverflow.com/questions/70098392/react-chartjs-2-with-chartjs-3-error-arc-is-not-a-registered-element
+Props Interface - https://www.geeksforgeeks.org/react-js-blueprint-suggest-props-interface/#
 */

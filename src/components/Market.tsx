@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios"; // HTTP requests
 import userService from "../services/user";
 import emojiRegex from "emoji-regex";
+
 import {
   Table,
   Tag,
@@ -193,7 +194,6 @@ function Market({
   }, [selectedToken]);
 
   /* ----------------------------------- Order Form ----------------------------------- */
-
   // Field Type's for Order Form
   type FieldType = {
     size?: number;
@@ -295,6 +295,7 @@ function Market({
     console.log("Failed:", errorInfo);
   };
 
+  /* ------------------------- Mouse Events ------------------------- */
   const confirmBid = (e?: React.MouseEvent<HTMLElement>) => {
     console.log(e);
     message.success("Knock on wood! Your bid was added to the order book.");
@@ -701,4 +702,6 @@ Number.MAX_SAFE_INTEGER - https://developer.mozilla.org/en-US/docs/Web/JavaScrip
 Day.js - https://day.js.org/docs/en/plugin/custom-parse-format
 form - https://stackoverflow.com/questions/74387690/how-to-submit-the-antd-form-onconfirmation-of-antd-popconfirm
 Broken Images - https://www.codevertiser.com/check-and-resolve-broken-images-in-reactjs/
+UniSat Wallet API - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet#sendbitcoin
+Props Interface - https://www.geeksforgeeks.org/react-js-blueprint-suggest-props-interface/#
 */

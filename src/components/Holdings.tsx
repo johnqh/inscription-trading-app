@@ -6,6 +6,7 @@ import btcLogo from "../images/btc-logo.png";
 import logo from "../images/Zorro Cat Logo.png";
 import getSpotPrice from "../services/spot_price";
 
+
 export type Holding = {
   tick: string;
   address: string;
@@ -33,6 +34,7 @@ function Holdings({
   setSelectedToken,
   setOrderType,
 }: HoldingsProps) {
+
   const [totalTokens, setTotalTokens] = useState(0);
   const [tick, setTick] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -391,4 +393,9 @@ export default Holdings;
 Modal - https://ant.design/components/modal
 UniSat Endpoints - https://open-api-testnet.unisat.io/swagger.html
 Flexbox - https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+List - https://ant.design/components/list
+Card - https://ant.design/components/card
+Space - https://ant.design/components/space
+CustomizeRenderEmpty() - https://ant.design/components/empty
+Props Interface - https://www.geeksforgeeks.org/react-js-blueprint-suggest-props-interface/#
 */

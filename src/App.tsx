@@ -89,13 +89,11 @@ function App() {
   const [selectedMenuItem, setSelectedMenuItem] = useState("home");
   const [selectedToken, setSelectedToken] = useState(""); // Initially defined in the Market component, we now need to define it here to have tokens on the account page that can link to that specific token's market page.
   const [orderType, setOrderType] = useState("buy");
-
   const setMenuItem = (item: string) => {
     setSelectedMenuItem(item);
   };
 
   const componentsSwitch = (key: string) => {
-    // console.log(key);
     switch (key) {
       case "home":
         return <Home setMenuItem={setMenuItem}></Home>;
@@ -123,7 +121,6 @@ function App() {
         );
       case "nft":
         return <Nft address={accounts[0]}></Nft>;
-
       default:
         break;
     }
@@ -199,6 +196,14 @@ export default App;
 
 /*
 -------------------- References --------------------
-Ant Design - https://ant.design/
+Layout - https://ant.design/components/layout
+Popover - https://ant.design/components/popover
+Icon - https://ant.design/components/icon
+Flex - https://ant.design/components/flex
+Menu - https://ant.design/components/menu
+Button - https://ant.design/components/button
+UniSat Wallet API - https://docs.unisat.io/dev/unisat-developer-service/unisat-wallet
 Settings Icon on Bottom Menu - https://github.com/ant-design/ant-design/issues/13572
+Pass Function as Prop - https://stackoverflow.com/questions/68895112/how-to-pass-function-as-a-prop-in-react-typescript
+Sharing State Between Components - https://react.dev/learn/sharing-state-between-components
 */
